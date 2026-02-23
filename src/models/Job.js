@@ -21,6 +21,12 @@ const JobSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  subjectCode: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    index: true,
+  },
   category: {
     type: String,
     required: true,

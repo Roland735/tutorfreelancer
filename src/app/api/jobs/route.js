@@ -47,6 +47,7 @@ export async function GET(req) {
     const urgency = searchParams.get('urgency');
     const academicLevel = searchParams.get('level');
     const keyword = searchParams.get('keyword');
+    const subjectCode = searchParams.get('code');
     const sort = searchParams.get('sort') || 'newest';
     const postedDate = searchParams.get('posted');
     const applicants = searchParams.get('applicants');

@@ -4,11 +4,14 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 export default function Hero({ stats }) {
+  const router = useRouter();
   const [placeholder, setPlaceholder] = useState("Calculus");
+  const [searchTerm, setSearchTerm] = useState("");
   const subjects = ["Calculus", "Python", "Physics", "Essay Writing", "Spanish", "Statistics"];
 
   useEffect(() => {
@@ -19,6 +22,18 @@ export default function Hero({ stats }) {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+
+    // Simple heuristic: if it looks like a course code (e.g. CS101, MATH202, SIVR), search by code
+    // SIVR is 4 letters, so let's say 3-5 letters potentially followed by numbers or just letters if it's a known code
+    const isCode = /^[A-Za-z]{3,5}\d{0,4}$/.test(searchTerm.trim()) && searchTerm.trim().length <= 8;
+
+    const query = isCode ? `code=${searchTerm.trim()}` : `keyword=${searchTerm.trim()}`;
+    router.push(`/jobs?${query}`);
+  };
 
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden bg-background">
@@ -46,17 +61,19 @@ export default function Hero({ stats }) {
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-12 relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary to-emerald-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-500" />
-            <div className="relative bg-card border border-border rounded-full flex items-center p-2 shadow-2xl">
+            <form onSubmit={handleSearch} className="relative bg-card border border-border rounded-full flex items-center p-2 shadow-2xl">
               <Search className="text-muted-foreground ml-4 w-5 h-5" />
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={`Try searching for "${placeholder}"...`}
                 className="w-full bg-transparent border-none focus:ring-0 text-foreground placeholder-muted-foreground px-4 text-lg outline-none"
               />
-              <Button size="lg" className="rounded-full px-8">
+              <Button type="submit" size="lg" className="rounded-full px-8">
                 Search
               </Button>
-            </div>
+            </form>
           </div>
 
           {/* CTAs */}

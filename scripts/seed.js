@@ -238,12 +238,14 @@ async function seedJobs(users, categories) {
     const poster = faker.helpers.arrayElement(studentUsers);
     const category = faker.helpers.arrayElement(categories);
     const subject = faker.helpers.arrayElement(category.subjects);
+    const subjectCode = faker.helpers.arrayElement(['MATH101', 'CS101', 'PHY202', 'CHEM101', 'SIVR', 'ENG101', 'HIST201', 'BIO301', 'BUS101']);
 
     const job = new Job({
       postedBy: poster._id,
       title: `Help needed with ${subject}`,
       description: faker.lorem.paragraph(3),
       subject: subject,
+      subjectCode: subjectCode,
       category: category.name,
       academicLevel: faker.helpers.arrayElement(['High School', 'Undergraduate', 'Graduate']),
       budget: {

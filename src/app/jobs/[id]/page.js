@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   MapPin, DollarSign, Clock, Tag, Monitor, GraduationCap, ArrowLeft,
-  CheckCircle, Loader2, Star, Briefcase, Calendar, X
+  CheckCircle, Loader2, Star, Briefcase, Calendar, X, Share2
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Button } from "@/components/ui/Button";
@@ -88,6 +88,30 @@ export default function JobDetailsPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleShare = () => {
+    const shareText = `
+👋 *Contact for:* ${job.title}
+🔢 *CODE:* ${job.subjectCode || "N/A"}
+🆔 *Listing ID:* ${job._id}
+📍 *Location:* ${job.sessionType}
+💰 *Price:* $${job.budget?.min} - $${job.budget?.max} (${job.budget?.type})
+👤 *Contact:* ${job.postedBy?.name || "Hidden"}
+
+📝 *Description:*
+${job.description?.substring(0, 150)}...
+
+✨ *Features:*
+• ${job.academicLevel}
+• ${job.urgency} Urgency
+• ${job.duration}
+
+🔗 *Link:* ${window.location.href}
+    `.trim();
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) {
@@ -219,6 +243,11 @@ export default function JobDetailsPage() {
                     <Badge variant="secondary" className="mb-3 text-primary border-primary/20 bg-primary/10">
                       {job.category}
                     </Badge>
+                    {job.subjectCode && (
+                      <Badge variant="outline" className="mb-3 ml-2 border-emerald-500/20 text-emerald-600 bg-emerald-500/5">
+                        {job.subjectCode}
+                      </Badge>
+                    )}
                     <h1 className="text-3xl font-bold font-heading mb-2">{job.title}</h1>
                     <p className="text-muted-foreground text-sm flex items-center gap-2">
                       Posted {job.createdAt ? formatDistanceToNow(new Date(job.createdAt)) : "recently"} ago
@@ -226,20 +255,25 @@ export default function JobDetailsPage() {
                       {job.applicants?.length || 0} applicants
                     </p>
                   </div>
-                  {isTutor && !isOwner && !hasApplied && (
-                    <Button
-                      size="lg"
-                      onClick={() => setShowApplyModal(true)}
-                      className="shadow-lg shadow-primary/20"
-                    >
-                      Apply Now
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button variant="outline" size="lg" onClick={handleShare} className="gap-2">
+                      <Share2 size={18} /> Share
                     </Button>
-                  )}
-                  {hasApplied && (
-                    <Button size="lg" disabled variant="secondary" className="gap-2">
-                      <CheckCircle size={18} /> Applied
-                    </Button>
-                  )}
+                    {isTutor && !isOwner && !hasApplied && (
+                      <Button
+                        size="lg"
+                        onClick={() => setShowApplyModal(true)}
+                        className="shadow-lg shadow-primary/20"
+                      >
+                        Apply Now
+                      </Button>
+                    )}
+                    {hasApplied && (
+                      <Button size="lg" disabled variant="secondary" className="gap-2">
+                        <CheckCircle size={18} /> Applied
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-4 py-6 border-y border-border mb-8">

@@ -18,6 +18,11 @@ export default function JobCard({ job }) {
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
               {job.category || "General"}
             </Badge>
+            {job.subjectCode && (
+              <Badge variant="outline" className="border-emerald-500/20 text-emerald-600 bg-emerald-500/5">
+                {job.subjectCode}
+              </Badge>
+            )}
             {job.urgency && job.urgency !== "Low" && (
               <Badge variant={job.urgency === "High" || job.urgency === "Immediate" ? "destructive" : "secondary"} className={job.urgency !== "High" && job.urgency !== "Immediate" ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20 dark:text-yellow-400" : ""}>
                 {job.urgency}

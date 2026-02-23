@@ -21,6 +21,7 @@ function JobsContent() {
   // Initial state from URL params
   const [filters, setFilters] = useState({
     keyword: searchParams.get("keyword") || "",
+    code: searchParams.get("code") || "",
     category: searchParams.get("category") || "All",
     type: searchParams.get("type") || "Any",
     level: searchParams.get("level") || "Any",
@@ -79,6 +80,7 @@ function JobsContent() {
   const clearFilters = () => {
     setFilters({
       keyword: "",
+      code: "",
       category: "All",
       type: "Any",
       level: "Any",
@@ -135,6 +137,18 @@ function JobsContent() {
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-primary hover:text-primary/80 h-auto p-0 hover:bg-transparent">
                   Clear All
                 </Button>
+              </div>
+
+              {/* Subject Code Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2 text-muted-foreground">Subject Code</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. SIVR, MATH101"
+                  value={filters.code}
+                  onChange={(e) => handleFilterChange("code", e.target.value)}
+                  className="w-full"
+                />
               </div>
 
               {/* Category Filter */}
