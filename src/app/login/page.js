@@ -18,6 +18,7 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +47,25 @@ function LoginContent() {
 
   const handleSocialLogin = (provider) => {
     signIn(provider, { callbackUrl: redirect });
+  };
+
+  const handleFill = async (role) => {
+    setDemoLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/demo-users?role=${role}`);
+      const data = await res.json();
+      if (res.ok && data?.email) {
+        setEmail(data.email);
+        setPassword("password123");
+      } else {
+        setError(data?.message || "No seeded user found");
+      }
+    } catch {
+      setError("Unable to load seeded user");
+    } finally {
+      setDemoLoading(false);
+    }
   };
 
   return (
@@ -115,6 +135,37 @@ function LoginContent() {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
+          <div className="mt-4">
+            <div className="text-sm text-muted-foreground mb-2">Quick fill seeded login</div>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={demoLoading || loading}
+                onClick={() => handleFill("student")}
+              >
+                Student
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={demoLoading || loading}
+                onClick={() => handleFill("tutor")}
+              >
+                Tutor
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={demoLoading || loading}
+                onClick={() => handleFill("admin")}
+              >
+                Admin
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">Seed password is password123</div>
+          </div>
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
