@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { name, email, password, role, university, major } = await req.json();
+    const { name, email, password, role, university, major, country } = await req.json();
 
     await dbConnect();
 
@@ -27,6 +27,9 @@ export async function POST(req) {
       role: role || "student",
       university: university || "",
       major: major || "",
+      location: {
+        country: country || "",
+      },
     });
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });

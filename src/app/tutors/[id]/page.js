@@ -69,6 +69,9 @@ export default function TutorProfilePage() {
   }
 
   const { user, stats, subjects, hourlyRate, reviews, portfolio, education, certifications, availability, sessionType } = tutor;
+  const memberSinceDate = user?.createdAt ? new Date(user.createdAt) : null;
+  const memberSince = memberSinceDate && !Number.isNaN(memberSinceDate.getTime()) ? format(memberSinceDate, "MMM yyyy") : "recently";
+  const majorText = user?.major ? `${user.major} • ` : "";
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -105,7 +108,7 @@ export default function TutorProfilePage() {
                     <p className="text-xl text-primary font-medium flex items-center justify-center md:justify-start gap-2">
                       <GraduationCap size={20} /> {user.university}
                     </p>
-                    <p className="text-muted-foreground text-sm mt-1">{user.major} • Member since {format(new Date(user.createdAt), 'MMM yyyy')}</p>
+                    <p className="text-muted-foreground text-sm mt-1">{majorText}Member since {memberSince}</p>
                   </div>
 
                   {/* Badges */}

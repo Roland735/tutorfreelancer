@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import {
   Wallet, Briefcase, Calendar, Star, TrendingUp,
@@ -18,36 +19,79 @@ import { cn } from "@/lib/utils";
 
 export default function TutorDashboard() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [sessionsData, setSessionsData] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [tutorReviews, setTutorReviews] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+    if (status !== "authenticated") return;
 
-  // Mock Data
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const [profileRes, jobsRes, sessionsRes, appsRes, reviewsRes] = await Promise.all([
+          fetch("/api/profile"),
+          fetch("/api/jobs?limit=4&sort=newest"),
+          fetch("/api/tutor/sessions"),
+          fetch("/api/jobs/applied"),
+          fetch(`/api/tutors/${session?.user?.id}`),
+        ]);
+
+        if (profileRes.ok) {
+          const data = await profileRes.json();
+          setProfile(data);
+        }
+
+        if (jobsRes.ok) {
+          const data = await jobsRes.json();
+          setRecommendedJobs(data.jobs || []);
+        }
+
+        if (sessionsRes.ok) {
+          const data = await sessionsRes.json();
+          setSessionsData(data || []);
+        }
+
+        if (appsRes.ok) {
+          const data = await appsRes.json();
+          setApplications(data || []);
+        }
+
+        if (reviewsRes.ok) {
+          const data = await reviewsRes.json();
+          setTutorReviews(data.reviews || []);
+        }
+      } catch (e) {
+        setError("Failed to load tutor dashboard data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    load();
+  }, [status, router, session]);
+
   const stats = {
-    totalEarnings: 1250,
-    pendingPayout: 150,
-    profileViews: 45,
-    successRate: 92,
-    repeatStudents: 8
+    totalEarnings: profile?.tutorProfile?.stats?.totalEarnings || 0,
+    pendingPayout: 0,
+    profileViews: profile?.tutorProfile?.stats?.profileViews || 0,
+    successRate: profile?.tutorProfile?.stats?.completionRate || 0,
+    repeatStudents: profile?.tutorProfile?.stats?.repeatStudents || 0,
   };
 
-  const recommendedJobs = [
-    { id: 1, title: "Advanced Python Tutor", budget: "$40-60/hr", posted: "2 hours ago", match: "98%" },
-    { id: 2, title: "Machine Learning Basics", budget: "$50/hr", posted: "5 hours ago", match: "95%" }
-  ];
-
-  const sessions = [
-    { id: 1, student: "Alex M.", subject: "Python", date: "Today, 5:00 PM", status: "Upcoming", avatar: "https://ui-avatars.com/api/?name=Alex+M&background=random" },
-    { id: 2, student: "Sarah J.", subject: "Calculus", date: "Tomorrow, 2:00 PM", status: "Upcoming", avatar: "https://ui-avatars.com/api/?name=Sarah+J&background=random" }
-  ];
-
-  const earningsData = [30, 45, 20, 60, 50, 80, 40]; // Weekly earnings data points
+  const earningsData = [10, 30, 20, 40, 25, 60, 35];
 
   if (status === "loading" || isLoading) {
     return (
@@ -103,33 +147,60 @@ export default function TutorDashboard() {
         <div className="container mx-auto px-4 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-center gap-6">
-              <div className="bg-card p-4 rounded-full border-2 border-primary/20 shadow-lg shadow-primary/5">
-                <BookOpen className="text-4xl text-primary" />
-              </div>
+              <Avatar
+                src={profile?.avatar}
+                alt={profile?.name || session?.user?.name}
+                fallback={(profile?.name || session?.user?.name || "T").charAt(0)}
+                className="h-16 w-16 border-2 border-primary/30"
+              />
               <div>
-                <h1 className="text-3xl font-bold font-heading mb-2">
+                <h1 className="text-3xl font-bold font-heading mb-1">
                   Welcome back, {session?.user?.name || "Tutor"}
                 </h1>
-                <div className="flex items-center gap-4 text-sm">
+                <p className="text-sm text-muted-foreground mb-2">
+                  {profile?.tutorProfile?.subjects?.length
+                    ? profile.tutorProfile.subjects.slice(0, 2).map(s => s.name).join(" • ")
+                    : "Keep your profile up to date to attract more students."}
+                </p>
+                <div className="flex flex-wrap items-center gap-3 text-sm">
                   <Badge variant="secondary" className="gap-1 border-primary/20 text-primary bg-primary/5">
-                    <CheckCircle size={14} /> Profile 85% Complete
+                    <CheckCircle size={14} /> {profile?.isProfileComplete ? "Profile Complete" : "Complete your profile"}
                   </Badge>
-                  <Link href="/profile/edit" className="text-muted-foreground hover:text-foreground underline underline-offset-4 transition">
-                    Complete Profile
+                  <Link href="/profile/edit" className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition">
+                    Edit Profile
                   </Link>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-8 bg-card/80 p-6 rounded-xl border border-border backdrop-blur-sm shadow-sm">
-              <div className="text-right">
-                <p className="text-muted-foreground text-sm font-medium">Total Earnings</p>
-                <p className="text-3xl font-bold text-primary">${stats.totalEarnings}</p>
-              </div>
-              <div className="w-px bg-border"></div>
-              <div className="text-right">
-                <p className="text-muted-foreground text-sm font-medium">Pending Payout</p>
-                <p className="text-2xl font-bold">${stats.pendingPayout}</p>
+            <div className="flex flex-col items-stretch md:items-end gap-3">
+              {session?.user?.role === "both" && (
+                <div className="inline-flex rounded-full border border-border bg-card p-1 text-xs md:text-sm">
+                  <button
+                    className="px-3 py-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+                    type="button"
+                    onClick={() => router.push("/dashboard/student")}
+                  >
+                    Student view
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded-full bg-primary text-primary-foreground"
+                    type="button"
+                  >
+                    Tutor view
+                  </button>
+                </div>
+              )}
+              <div className="flex gap-8 bg-card/80 p-6 rounded-xl border border-border backdrop-blur-sm shadow-sm">
+                <div className="text-right">
+                  <p className="text-muted-foreground text-sm font-medium">Total Earnings</p>
+                  <p className="text-3xl font-bold text-primary">${stats.totalEarnings}</p>
+                </div>
+                <div className="w-px bg-border"></div>
+                <div className="text-right">
+                  <p className="text-muted-foreground text-sm font-medium">Pending Payout</p>
+                  <p className="text-2xl font-bold">${stats.pendingPayout}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -206,12 +277,8 @@ export default function TutorDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-bold font-heading">Earnings Overview</h3>
-                  <div className="w-[150px]">
-                    <Select>
-                      <option>Last 7 Days</option>
-                      <option>Last 30 Days</option>
-                      <option>This Year</option>
-                    </Select>
+                  <div className="w-[150px] text-sm text-muted-foreground">
+                    Based on recent sessions
                   </div>
                 </div>
 
@@ -236,7 +303,6 @@ export default function TutorDashboard() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Recommended Jobs */}
             {(activeTab === 'overview' || activeTab === 'jobs') && (
               <Card className="h-full shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -246,15 +312,29 @@ export default function TutorDashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {recommendedJobs.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No recommended jobs found yet. Check back soon.</p>
+                  )}
                   {recommendedJobs.map(job => (
-                    <div key={job.id} className="p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition cursor-pointer group hover:bg-accent/30">
+                    <div key={job._id} className="p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition cursor-pointer group hover:bg-accent/30">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold group-hover:text-primary transition">{job.title}</h4>
-                        <Badge variant="outline" className="text-xs border-primary text-primary bg-primary/5">{job.match}</Badge>
+                        <Badge variant="outline" className="text-xs border-primary text-primary bg-primary/5">
+                          {job.category}
+                        </Badge>
                       </div>
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><DollarSign size={14} /> {job.budget}</span>
-                        <span className="flex items-center gap-1"><Clock size={14} /> {job.posted}</span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign size={14} />{" "}
+                          {job.budget?.min && job.budget?.max
+                            ? `$${job.budget.min} - $${job.budget.max}/hr`
+                            : job.budget?.min
+                              ? `$${job.budget.min}/hr`
+                              : "N/A"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={14} /> {new Date(job.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -262,7 +342,50 @@ export default function TutorDashboard() {
               </Card>
             )}
 
-            {/* Upcoming Sessions */}
+            {activeTab === 'applications' && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle>My Applications</CardTitle>
+                  <Button variant="link" className="text-primary h-auto p-0" asChild>
+                    <Link href="/jobs">Browse More Jobs</Link>
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {applications.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      You haven&apos;t applied to any jobs yet.
+                    </p>
+                  )}
+                  {applications.map(job => (
+                    <div key={job._id} className="p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition group">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-bold group-hover:text-primary transition">{job.title}</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {job.category}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {job.description}
+                      </p>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>
+                          Budget:{" "}
+                          {job.budget?.min && job.budget?.max
+                            ? `$${job.budget.min} - $${job.budget.max}`
+                            : job.budget?.min
+                              ? `$${job.budget.min}`
+                              : "N/A"}
+                        </span>
+                        <span>
+                          Posted by {job.postedBy?.name || "Client"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             {(activeTab === 'overview' || activeTab === 'sessions') && (
               <Card className="h-full shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -272,20 +395,136 @@ export default function TutorDashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {sessions.filter(s => s.status === 'Upcoming').map(session => (
-                    <div key={session.id} className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition group">
+                  {sessionsData.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No upcoming sessions scheduled.</p>
+                  )}
+                  {sessionsData.map(session => (
+                    <div key={session._id} className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-accent/30 transition group">
                       <div className="bg-primary/10 p-3 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                         <Clock size={20} />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold">{session.subject}</h4>
-                        <p className="text-sm text-muted-foreground">with {session.student} • {session.date}</p>
+                        <h4 className="font-bold">{session.job?.title || "Session"}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          with {session.student?.name || "Student"} •{" "}
+                          {new Date(session.date).toLocaleString()}
+                        </p>
                       </div>
                       <Button size="icon" variant="ghost" className="rounded-full hover:bg-primary hover:text-primary-foreground">
                         <ChevronRight size={20} />
                       </Button>
                     </div>
                   ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'earnings' && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle>Earnings & Payouts</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl border border-border bg-card">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Earnings</p>
+                      <p className="text-2xl font-bold text-primary mt-2">${stats.totalEarnings.toFixed(2)}</p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border bg-card">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Completed Sessions</p>
+                      <p className="text-2xl font-bold mt-2">
+                        {sessionsData.filter(s => s.status === "Completed").length}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-border bg-card">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Average Rating</p>
+                      <p className="text-2xl font-bold mt-2 flex items-center gap-1">
+                        {profile?.tutorProfile?.stats?.rating
+                          ? profile.tutorProfile.stats.rating.toFixed(1)
+                          : "No rating"}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed payouts and transaction history can be added here once payment integration is connected.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'reviews' && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle>Reviews</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {tutorReviews.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      You haven&apos;t received any reviews yet.
+                    </p>
+                  )}
+                  {tutorReviews.map((review) => (
+                    <div key={review._id} className="p-4 rounded-xl border border-border bg-card space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <Avatar src={review.reviewer?.avatar} alt={review.reviewer?.name} />
+                          <div>
+                            <p className="font-semibold text-sm">{review.reviewer?.name || "Student"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
+                          <Star className="w-4 h-4 fill-current" /> {review.rating.toFixed(1)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'profile' && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle>Profile & Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Name</p>
+                      <p className="font-semibold">{profile?.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{profile?.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Role</p>
+                      <p className="font-semibold">
+                        {profile?.role === "both"
+                          ? "Student & Tutor"
+                          : profile?.role
+                          ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                          : "Not set"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">University</p>
+                      <p className="font-semibold">{profile?.university || "Not set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Country</p>
+                      <p className="font-semibold">{profile?.location?.country || "Not set"}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild variant="outline">
+                      <Link href="/profile/edit">Edit Profile</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <Link href={`/tutors/${session?.user?.id}`}>View Public Tutor Profile</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

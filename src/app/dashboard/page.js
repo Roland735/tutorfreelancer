@@ -13,17 +13,27 @@ export default function Dashboard() {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
-      const role = session?.user?.role;
-      if (role === "student") {
-        router.push("/dashboard/student");
-      } else if (role === "tutor") {
-        router.push("/dashboard/tutor");
-      } else if (role === "admin") {
-        router.push("/admin");
-      } else {
-        // Default fallback or for 'both' role
-        router.push("/dashboard/student");
-      }
+      const checkProfile = async () => {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.isProfileComplete) {
+            router.push("/profile-setup");
+            return;
+          }
+        }
+        const role = session?.user?.role;
+        if (role === "student") {
+          router.push("/dashboard/student");
+        } else if (role === "tutor") {
+          router.push("/dashboard/tutor");
+        } else if (role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard/student");
+        }
+      };
+      checkProfile();
     }
   }, [status, router, session]);
 

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import TutorProfile from "@/models/TutorProfile";
-import User from "@/models/User";
 import Review from "@/models/Review";
 
 export async function GET(req, { params }) {
@@ -12,13 +11,13 @@ export async function GET(req, { params }) {
     
     // First, try to find by User ID
     let tutor = await TutorProfile.findOne({ user: id })
-      .populate("user", "name avatar university location bio languages socialLinks")
+      .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline")
       .lean();
 
     // If not found, try to find by TutorProfile ID (fallback)
     if (!tutor) {
       tutor = await TutorProfile.findById(id)
-        .populate("user", "name avatar university location bio languages socialLinks")
+        .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline")
         .lean();
     }
 

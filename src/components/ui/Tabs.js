@@ -2,35 +2,59 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-const Tabs = React.forwardRef(({ className, value, onValueChange, children, ...props }, ref) => (
-  <div ref={ref} className={cn("w-full", className)} {...props}>
-    {React.Children.map(children, child => {
-      if (React.isValidElement(child)) {
-        return React.cloneElement(child, { value, onValueChange });
+const TabsContext = React.createContext(null)
+
+const Tabs = React.forwardRef(({ className, value, onValueChange, children, ...props }, ref) => {
+  const [internalValue, setInternalValue] = React.useState(value)
+  const isControlled = value !== undefined
+  const currentValue = isControlled ? value : internalValue
+
+  const handleChange = React.useCallback(
+    (next) => {
+      if (!isControlled) {
+        setInternalValue(next)
       }
-      return child;
-    })}
-  </div>
-))
+      if (onValueChange) {
+        onValueChange(next)
+      }
+    },
+    [isControlled, onValueChange]
+  )
+
+  return (
+    <TabsContext.Provider value={{ value: currentValue, onValueChange: handleChange }}>
+      <div ref={ref} className={cn("w-full", className)} {...props}>
+        {children}
+      </div>
+    </TabsContext.Provider>
+  )
+})
 Tabs.displayName = "Tabs"
 
-const TabsList = React.forwardRef(({ className, value, onValueChange, children, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props}
-  >
-    {React.Children.map(children, child => {
-      if (React.isValidElement(child)) {
-        return React.cloneElement(child, { activeValue: value, onValueChange });
-      }
-      return child;
-    })}
-  </div>
-))
+const TabsList = React.forwardRef(({ className, children, ...props }, ref) => {
+  const context = React.useContext(TabsContext)
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+        className
+      )}
+      {...props}
+    >
+      {React.Children.map(children, child => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child, {
+            activeValue: context?.value,
+            onValueChange: context?.onValueChange,
+          })
+        }
+        return child
+      })}
+    </div>
+  )
+})
 TabsList.displayName = "TabsList"
 
 const TabsTrigger = React.forwardRef(({ className, value, activeValue, onValueChange, children, ...props }, ref) => (
@@ -52,14 +76,11 @@ const TabsTrigger = React.forwardRef(({ className, value, activeValue, onValueCh
 ))
 TabsTrigger.displayName = "TabsTrigger"
 
-const TabsContent = React.forwardRef(({ className, value: contentValue, value: parentValue, children, ...props }, ref) => {
-  // Note: We need to handle value prop from parent (Tabs) vs value prop of this content
-  // In this simple implementation, we rely on the parent passing 'value' as 'parentValue' via cloneElement
-  // But TabsContent is usually not a direct child of TabsList, but Tabs.
-  // So Tabs needs to pass value to direct children.
-  
-  if (contentValue !== parentValue) return null
-  
+const TabsContent = React.forwardRef(({ className, value, children, ...props }, ref) => {
+  const context = React.useContext(TabsContext)
+
+  if (context?.value !== value) return null
+
   return (
     <div
       ref={ref}

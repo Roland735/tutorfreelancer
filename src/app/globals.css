@@ -50,65 +50,35 @@
 /* Custom Base Styles */
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #020817; /* Slate-950 */
+    --background: #020817;
+    --foreground: #f8fafc;
 
-    --card: #ffffff;
-    --card-foreground: #020817;
+    --card: #020817;
+    --card-foreground: #f8fafc;
 
-    --popover: #ffffff;
-    --popover-foreground: #020817;
+    --popover: #020817;
+    --popover-foreground: #f8fafc;
 
-    --primary: #10b981; /* Emerald-500 */
+    --primary: #10b981;
     --primary-foreground: #ffffff;
 
-    --secondary: #d1fae5; /* Emerald-100 */
-    --secondary-foreground: #064e3b; /* Emerald-900 */
+    --secondary: #064e3b;
+    --secondary-foreground: #ecfdf5;
 
-    --muted: #ecfdf5; /* Emerald-50 */
-    --muted-foreground: #047857; /* Emerald-700 */
+    --muted: #064e3b;
+    --muted-foreground: #6ee7b7;
 
-    --accent: #ecfdf5; /* Emerald-50 */
-    --accent-foreground: #064e3b; /* Emerald-900 */
+    --accent: #064e3b;
+    --accent-foreground: #ecfdf5;
 
-    --destructive: #ef4444; /* Red-500 */
-    --destructive-foreground: #f8fafc; /* Slate-50 */
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
 
-    --border: #e2e8f0; /* Slate-200 - Keeping borders neutral for now, or maybe light emerald? */
-    --input: #e2e8f0; /* Slate-200 */
-    --ring: #10b981; /* Emerald-500 */
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #059669;
 
     --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: #020817; /* Slate-950 - Keeping dark bg as Slate for depth, or switch to Emerald-950? User didn't ask to change global bg, just secondary. */
-    --foreground: #f8fafc; /* Slate-50 */
-
-    --card: #020817; /* Slate-950 */
-    --card-foreground: #f8fafc; /* Slate-50 */
-
-    --popover: #020817; /* Slate-950 */
-    --popover-foreground: #f8fafc; /* Slate-50 */
-
-    --primary: #10b981; /* Emerald-500 */
-    --primary-foreground: #ffffff;
-
-    --secondary: #064e3b; /* Emerald-900 */
-    --secondary-foreground: #ecfdf5; /* Emerald-50 */
-
-    --muted: #064e3b; /* Emerald-900 */
-    --muted-foreground: #6ee7b7; /* Emerald-300 */
-
-    --accent: #064e3b; /* Emerald-900 */
-    --accent-foreground: #ecfdf5; /* Emerald-50 */
-
-    --destructive: #7f1d1d; /* Red-900 */
-    --destructive-foreground: #f8fafc; /* Slate-50 */
-
-    --border: #1e293b; /* Slate-800 - Keeping borders neutral */
-    --input: #1e293b; /* Slate-800 */
-    --ring: #059669; /* Emerald-600 */
   }
 }
 

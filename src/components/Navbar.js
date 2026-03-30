@@ -6,7 +6,6 @@ import { FaGraduationCap, FaBars, FaTimes } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -62,8 +61,6 @@ export default function Navbar() {
 
         {/* Auth Buttons */}
         <div className="hidden lg:flex gap-4 items-center">
-          <ThemeToggle />
-
           {session ? (
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground text-sm hidden xl:block">Hi, {session.user.name}</span>
@@ -88,7 +85,6 @@ export default function Navbar() {
 
         {/* Mobile Menu Button */}
         <div className="flex lg:hidden items-center gap-4">
-          <ThemeToggle />
           <button
             className="text-foreground hover:text-primary transition"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

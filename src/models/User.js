@@ -85,6 +85,10 @@ const UserSchema = new mongoose.Schema({
   tutorProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TutorProfile',
+  },
+  isProfileComplete: {
+    type: Boolean,
+    default: false,
   }
 }, {
   timestamps: true,

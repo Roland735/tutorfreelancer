@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import {
   Briefcase, Calendar, MessageSquare, CreditCard,
@@ -17,6 +18,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function StudentDashboard() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,11 +98,30 @@ export default function StudentDashboard() {
             <h1 className="text-3xl font-bold font-heading">Welcome back, {session?.user?.name || "Student"}!</h1>
             <p className="text-muted-foreground">Manage your studies and find the perfect tutor.</p>
           </div>
-          <Button asChild className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
-            <Link href="/dashboard/post-job">
-              <Plus size={16} /> Post a New Job
-            </Link>
-          </Button>
+          <div className="flex flex-col items-stretch md:items-end gap-3">
+            {session?.user?.role === "both" && (
+              <div className="inline-flex rounded-full border border-border bg-card p-1 text-xs md:text-sm">
+                <button
+                  className="px-3 py-1 rounded-full bg-primary text-primary-foreground"
+                  type="button"
+                >
+                  Student view
+                </button>
+                <button
+                  className="px-3 py-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+                  type="button"
+                  onClick={() => router.push("/dashboard/tutor")}
+                >
+                  Tutor view
+                </button>
+              </div>
+            )}
+            <Button asChild className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+              <Link href="/dashboard/post-job">
+                <Plus size={16} /> Post a New Job
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
