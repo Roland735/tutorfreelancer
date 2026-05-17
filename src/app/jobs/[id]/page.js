@@ -1,27 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import {
-  MapPin, DollarSign, Clock, Tag, Monitor, GraduationCap, ArrowLeft,
-  CheckCircle, Loader2, Star, Briefcase, Calendar, X, Share2
+  ArrowLeft,
+  CheckCircle,
+  Loader2,
+  MessageSquare,
+  Send,
+  Share2,
+  X,
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import WorkspaceShell from "@/components/layout/WorkspaceShell";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Avatar } from "@/components/ui/Avatar";
+import { EmptyState, StatusPill } from "@/components/dashboard/WorkspaceUI";
+import { useWorkspace } from "@/components/dashboard/useWorkspace";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
-  const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: workspace } = useWorkspace();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,7 @@ export default function JobDetailsPage() {
   // Application State
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [applyMessage, setApplyMessage] = useState("");
   const [applicationData, setApplicationData] = useState({
     coverLetter: "",
     bidAmount: "",
@@ -57,10 +61,6 @@ export default function JobDetailsPage() {
 
   const handleApplySubmit = async (e) => {
     e.preventDefault();
-    if (!session) {
-      router.push(`/login?redirect=/jobs/${id}`);
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -72,19 +72,19 @@ export default function JobDetailsPage() {
 
       if (res.ok) {
         setShowApplyModal(false);
+        setApplyMessage("Application submitted successfully.");
         // Refresh job data to show applied status
         const jobRes = await fetch(`/api/jobs/${id}`);
         if (jobRes.ok) {
           setJob(await jobRes.json());
         }
-        alert("Application submitted successfully!");
       } else {
         const errorData = await res.json();
-        alert(errorData.message || "Failed to submit application");
+        setApplyMessage(errorData.message || "Failed to submit application");
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("An error occurred. Please try again.");
+      setApplyMessage("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,46 +116,31 @@ ${job.description?.substring(0, 150)}...
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
+      <WorkspaceShell>
+        <div className="flex min-h-[50vh] items-center justify-center">
           <Loader2 className="animate-spin text-4xl text-primary" />
         </div>
-        <Footer />
-      </div>
+      </WorkspaceShell>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold font-heading mb-4">Job Not Found</h1>
-            <Button asChild variant="link" className="text-primary text-lg">
-              <Link href="/jobs">Browse All Jobs</Link>
-            </Button>
-          </div>
-        </div>
-        <Footer />
-      </div>
+      <WorkspaceShell>
+        <EmptyState title="Job not found" description="This request may have been removed or is no longer available." ctaHref="/jobs" ctaLabel="Browse all jobs" />
+      </WorkspaceShell>
     );
   }
 
-  const isRemote = job.sessionType === "Online";
-  const hasApplied = session?.user && job.applicants?.some(app => app.user._id === session.user.id || app.user === session.user.id);
-  const isOwner = session?.user?.id === job.postedBy?._id;
-  const isTutor = session?.user?.role === 'tutor' || session?.user?.role === 'both';
+  const currentUserId = workspace?.profileSummary?.id;
+  const hasApplied = workspace?.applications?.sent?.some((item) => item.jobId === job._id);
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative font-sans">
-      <Navbar />
-
+    <WorkspaceShell>
       {/* Application Modal */}
       {showApplyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <Card className="max-w-lg w-full relative border-border shadow-2xl">
+          <Card className="relative w-full max-w-lg border-white/10 bg-slate-900">
             <Button
               variant="ghost"
               size="icon"
@@ -166,8 +151,8 @@ ${job.description?.substring(0, 150)}...
             </Button>
 
             <CardHeader>
-              <CardTitle className="text-2xl font-heading">Apply for this Job</CardTitle>
-              <CardDescription>Submit your proposal to the student.</CardDescription>
+              <CardTitle className="text-2xl font-heading text-white">Apply for this job</CardTitle>
+              <CardDescription>Send a fast, credible proposal to the requester.</CardDescription>
             </CardHeader>
 
             <CardContent>
@@ -183,7 +168,7 @@ ${job.description?.substring(0, 150)}...
                     className="w-full"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Client's Budget: ${job.budget?.min} - ${job.budget?.max}
+                    Client&apos;s Budget: ${job.budget?.min} - ${job.budget?.max}
                   </p>
                 </div>
 
@@ -226,89 +211,89 @@ ${job.description?.substring(0, 150)}...
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-12 md:py-20">
-        <Button variant="ghost" asChild className="mb-8 pl-0 hover:pl-2 transition-all gap-2 text-muted-foreground hover:text-foreground">
+      <div className="space-y-6">
+        <Button variant="ghost" asChild className="gap-2 rounded-full text-slate-300 hover:bg-white/[0.04] hover:text-white">
           <Link href="/jobs">
             <ArrowLeft size={16} /> Back to Jobs
           </Link>
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {applyMessage ? <StatusPill tone="success">{applyMessage}</StatusPill> : null}
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            <Card className="border-border">
+            <Card className="border-white/10 bg-white/[0.04]">
               <CardContent className="p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div>
-                    <Badge variant="secondary" className="mb-3 text-primary border-primary/20 bg-primary/10">
-                      {job.category}
-                    </Badge>
-                    {job.subjectCode && (
-                      <Badge variant="outline" className="mb-3 ml-2 border-emerald-500/20 text-emerald-600 bg-emerald-500/5">
-                        {job.subjectCode}
-                      </Badge>
-                    )}
-                    <h1 className="text-3xl font-bold font-heading mb-2">{job.title}</h1>
-                    <p className="text-muted-foreground text-sm flex items-center gap-2">
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <StatusPill tone="sky">{job.category}</StatusPill>
+                      {job.subjectCode ? <StatusPill tone="neutral">{job.subjectCode}</StatusPill> : null}
+                      <StatusPill tone="warning">{job.urgency}</StatusPill>
+                    </div>
+                    <h1 className="text-3xl font-bold font-heading mb-2 text-white">{job.title}</h1>
+                    <p className="text-slate-400 text-sm flex items-center gap-2">
                       Posted {job.createdAt ? formatDistanceToNow(new Date(job.createdAt)) : "recently"} ago
-                      <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+                      <span className="w-1 h-1 rounded-full bg-slate-500/50" />
                       {job.applicants?.length || 0} applicants
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button variant="outline" size="lg" onClick={handleShare} className="gap-2">
+                    <Button variant="outline" size="lg" onClick={handleShare} className="gap-2 rounded-full border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]">
                       <Share2 size={18} /> Share
                     </Button>
-                    {isTutor && !isOwner && !hasApplied && (
-                      <Button
-                        size="lg"
-                        onClick={() => setShowApplyModal(true)}
-                        className="shadow-lg shadow-primary/20"
-                      >
+                    {!hasApplied && (
+                      <Button size="lg" onClick={() => setShowApplyModal(true)} className="rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300">
                         Apply Now
                       </Button>
                     )}
                     {hasApplied && (
-                      <Button size="lg" disabled variant="secondary" className="gap-2">
+                      <Button size="lg" disabled variant="secondary" className="gap-2 rounded-full">
                         <CheckCircle size={18} /> Applied
                       </Button>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4 py-6 border-y border-border mb-8">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <DollarSign className="text-primary" size={18} />
-                    <span className="font-medium text-foreground">${job.budget?.min} - ${job.budget?.max}</span>
-                    <span className="text-xs">/{job.budget?.type || "hr"}</span>
+                <div className="grid gap-3 border-y border-white/8 py-6 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                    Budget
+                    <div className="mt-2 font-semibold text-white">${job.budget?.min} - ${job.budget?.max}</div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Monitor className="text-blue-400" size={18} />
-                    <span>{job.sessionType}</span>
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                    Session
+                    <div className="mt-2 font-semibold text-white">{job.sessionType}</div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="text-orange-400" size={18} />
-                    <span>{job.duration || "1-3 months"}</span>
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                    Deadline
+                    <div className="mt-2 font-semibold text-white">{job.deadline ? new Date(job.deadline).toLocaleDateString() : "Flexible"}</div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <GraduationCap className="text-purple-400" size={18} />
-                    <span>{job.academicLevel}</span>
+                  <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                    Level
+                    <div className="mt-2 font-semibold text-white">{job.academicLevel}</div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-xl font-bold font-heading mb-3">Description</h3>
-                    <div className="prose prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
+                    <h3 className="text-xl font-bold font-heading mb-3 text-white">Request details</h3>
+                    <div className="max-w-none text-slate-300 leading-relaxed whitespace-pre-line">
                       {job.description}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold font-heading mb-3">Specific Subject</h3>
-                    <div className="flex items-center gap-2">
-                      <Tag className="text-muted-foreground" size={16} />
-                      <span>{job.subject || job.category}</span>
+                    <h3 className="text-xl font-bold font-heading mb-3 text-white">Student requirements</h3>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                        Subject
+                        <div className="mt-2 font-semibold text-white">{job.subject || job.category}</div>
+                      </div>
+                      <div className="rounded-2xl border border-white/8 bg-slate-950/60 p-4 text-sm text-slate-300">
+                        City
+                        <div className="mt-2 font-semibold text-white">{job.location?.city || "Zimbabwe"}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -318,63 +303,74 @@ ${job.description?.substring(0, 150)}...
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <Card>
+            <Card className="border-white/10 bg-white/[0.04]">
               <CardHeader>
-                <CardTitle className="text-lg">About the Student</CardTitle>
+                <CardTitle className="text-lg text-white">About the requester</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar
-                    src={job.postedBy?.image}
+                    src={job.postedBy?.avatar}
                     alt={job.postedBy?.name}
                     fallback={job.postedBy?.name?.charAt(0) || "U"}
                     className="h-12 w-12"
                   />
                   <div>
-                    <h4 className="font-bold">{job.postedBy?.name || "Anonymous User"}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Member since {job.postedBy?.createdAt ? format(new Date(job.postedBy.createdAt), 'MMM yyyy') : "2024"}
+                    <h4 className="font-bold text-white">{job.postedBy?.name || "Anonymous User"}</h4>
+                    <p className="text-sm text-slate-400">
+                      {job.postedBy?.university || "University profile"}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Location</span>
-                    <span className="font-medium">{job.postedBy?.location?.country || "Unknown"}</span>
+                  <div className="flex justify-between py-2 border-b border-white/8">
+                    <span className="text-slate-400">Location</span>
+                    <span className="font-medium text-white">{job.location?.city || job.postedBy?.location?.city || "Unknown"}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Jobs Posted</span>
-                    <span className="font-medium">12</span>
+                  <div className="flex justify-between py-2 border-b border-white/8">
+                    <span className="text-slate-400">Applications</span>
+                    <span className="font-medium text-white">{job.applicants?.length || 0}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Hire Rate</span>
-                    <span className="font-medium">85%</span>
+                  <div className="flex justify-between py-2 border-b border-white/8">
+                    <span className="text-slate-400">Session type</span>
+                    <span className="font-medium text-white">{job.sessionType}</span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-muted-foreground">Verified Payment</span>
-                    <span className="text-primary flex items-center gap-1"><CheckCircle size={14} /> Yes</span>
+                    <span className="text-slate-400">Verified activity</span>
+                    <span className="text-emerald-300 flex items-center gap-1"><CheckCircle size={14} /> Yes</span>
                   </div>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3">
+                  <Button asChild className="rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300">
+                    <Link href="/messages">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Contact requester
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+            <Card className="border-white/10 bg-white/[0.04]">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-                  <CheckCircle className="text-primary" size={20} /> Safety Tips
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-2 text-white">
+                  <CheckCircle className="text-primary" size={20} /> Similar jobs
                 </h3>
-                <ul className="space-y-2 text-sm text-muted-foreground list-disc list-inside">
-                  <li>Keep all communications within the platform.</li>
-                  <li>Do not share personal contact info before a contract starts.</li>
-                  <li>Report any suspicious activity immediately.</li>
-                </ul>
+                <div className="space-y-3">
+                  {(job.similarJobs || []).slice(0, 3).map((item) => (
+                    <Link key={item._id} href={`/jobs/${item._id}`} className="block rounded-2xl border border-white/8 bg-slate-950/60 p-4 transition hover:border-emerald-300/20 hover:bg-white/[0.06]">
+                      <p className="font-medium text-white">{item.title}</p>
+                      <p className="mt-1 text-sm text-slate-400">{item.category} • ${item.budget?.min}-{item.budget?.max}</p>
+                    </Link>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </WorkspaceShell>
   );
 }

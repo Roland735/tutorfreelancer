@@ -45,6 +45,18 @@ const JobSchema = new mongoose.Schema({
     min: { type: Number, required: true },
     max: { type: Number },
   },
+  location: {
+    city: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    country: {
+      type: String,
+      trim: true,
+      default: 'Zimbabwe',
+    },
+  },
   sessionType: {
     type: String,
     enum: ['Online', 'In-Person', 'Both'],
@@ -67,6 +79,11 @@ const JobSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     coverLetter: String,
     bidAmount: Number,
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
     appliedAt: { type: Date, default: Date.now },
   }],
   status: {

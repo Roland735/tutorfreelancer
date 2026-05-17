@@ -22,6 +22,29 @@ const TutorProfileSchema = new mongoose.Schema({
     enum: ['Online', 'In-Person', 'Both'],
     default: 'Online',
   },
+  academicLevel: {
+    type: String,
+    default: '',
+  },
+  yearsOfExperience: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  shortBio: {
+    type: String,
+    default: '',
+    maxlength: 1000,
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['not_submitted', 'pending', 'verified'],
+    default: 'not_submitted',
+  },
+  verificationDocumentName: {
+    type: String,
+    default: '',
+  },
   availability: {
     monday: [{ start: String, end: String }],
     tuesday: [{ start: String, end: String }],

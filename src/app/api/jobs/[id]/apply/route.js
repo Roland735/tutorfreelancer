@@ -39,6 +39,7 @@ export async function POST(req, { params }) {
       user: session.user.id,
       coverLetter,
       bidAmount: Number(bidAmount),
+      status: "pending",
       appliedAt: new Date(),
     });
 

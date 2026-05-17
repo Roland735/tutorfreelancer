@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { FaGraduationCap, FaBars, FaTimes } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export default function Navbar() {
@@ -22,36 +22,45 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: "Find a Tutor", href: "/tutors" },
-    { name: "Browse Jobs", href: "/jobs" },
-    { name: "How It Works", href: "/#how-it-works" },
+    { name: "Find Tutors", href: "/tutors" },
+    { name: "Live Requests", href: "/#marketplace" },
     { name: "Subjects", href: "/#categories" },
+    { name: "How It Works", href: "/#how-it-works" },
     { name: "Pricing", href: "/#pricing" },
   ];
 
+  const navShell = scrolled
+    ? "border-white/10 bg-slate-950/78 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.95)] backdrop-blur-xl"
+    : "border-white/5 bg-slate-950/50 backdrop-blur-md";
+
   return (
-    <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
-          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-sm"
-          : "bg-transparent py-5 border-b border-transparent"
-        }`}
-    >
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-foreground flex items-center gap-2 group font-heading">
-          <FaGraduationCap className="text-primary text-3xl group-hover:text-primary/80 transition" />
-          <span className="tracking-tight">
-            Tutor<span className="text-primary">Freelance</span>
-          </span>
+    <nav className="sticky top-0 z-50 px-3 py-3 sm:px-4">
+      <div className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border px-4 py-3 transition-all duration-300 sm:px-5 ${navShell}`}>
+        <Link
+          href="/"
+          className="flex items-center gap-3 text-foreground transition hover:opacity-95"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 via-emerald-400/10 to-sky-400/20 text-emerald-300 shadow-[0_14px_30px_-18px_rgba(16,185,129,0.85)]">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="leading-tight">
+            <span className="block font-heading text-base font-semibold tracking-tight sm:text-lg">
+              TutorFreelance
+            </span>
+            <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">
+              Student Talent Network
+            </span>
+          </div>
         </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden lg:flex gap-6 items-center font-medium">
+        <div className="hidden items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] p-1 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${pathname === link.href ? "text-primary" : "text-muted-foreground"
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${pathname === link.href
+                  ? "bg-white/10 text-white"
+                  : "text-slate-300 hover:bg-white/6 hover:text-white"
                 }`}
             >
               {link.name}
@@ -59,78 +68,120 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Auth Buttons */}
-        <div className="hidden lg:flex gap-4 items-center">
+        <div className="hidden items-center gap-3 lg:flex">
           {session ? (
-            <div className="flex items-center gap-4">
-              <span className="text-muted-foreground text-sm hidden xl:block">Hi, {session.user.name}</span>
-              <Button variant="ghost" onClick={() => signOut()} size="sm">
-                Logout
+            <>
+              <span className="hidden text-sm text-slate-300 xl:block">
+                {session.user?.name}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="rounded-full px-4 text-slate-200 hover:bg-white/8 hover:text-white"
+              >
+                Log Out
               </Button>
-              <Button asChild className="rounded-full shadow-md">
+              <Button
+                asChild
+                size="sm"
+                className="rounded-full border border-emerald-300/20 bg-emerald-400 px-5 text-slate-950 shadow-[0_18px_40px_-20px_rgba(16,185,129,0.8)] hover:bg-emerald-300"
+              >
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-            </div>
+            </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="rounded-full px-4 text-slate-200 hover:bg-white/8 hover:text-white"
+              >
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="rounded-full shadow-md">
-                <Link href="/signup">Sign Up</Link>
+              <Button
+                asChild
+                size="sm"
+                className="rounded-full border border-emerald-300/20 bg-emerald-400 px-5 text-slate-950 shadow-[0_18px_40px_-20px_rgba(16,185,129,0.8)] hover:bg-emerald-300"
+              >
+                <Link href="/signup">Join Now</Link>
               </Button>
             </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex lg:hidden items-center gap-4">
-          <button
-            className="text-foreground hover:text-primary transition"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.08] lg:hidden"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        >
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-background border-b border-border p-4 shadow-xl flex flex-col gap-4 animate-in slide-in-from-top-5">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-foreground hover:text-primary py-2 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
-          <hr className="border-border" />
-          {session ? (
-            <>
-              <div className="flex items-center gap-2 py-2">
-                <img src={session.user.image || `https://ui-avatars.com/api/?name=${session.user.name}`} className="w-8 h-8 rounded-full" alt="User" />
-                <span className="font-bold">{session.user.name}</span>
-              </div>
-              <Button asChild className="w-full">
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
-                Logout
-              </Button>
-            </>
-          ) : (
+        <div className="mx-auto mt-3 max-w-7xl px-1 lg:hidden">
+          <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/92 p-4 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.95)] backdrop-blur-xl">
             <div className="flex flex-col gap-2">
-              <Button asChild variant="outline" className="w-full">
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
-              </Button>
-              <Button asChild className="w-full">
-                <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-              </Button>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/6 hover:text-white"
+                >
+                  {link.name}
+                </Link>
+              ))}
             </div>
-          )}
+            <div className="my-4 h-px bg-white/10" />
+            {session ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                  <img
+                    src={session.user?.image || `https://ui-avatars.com/api/?name=${session.user?.name || "User"}`}
+                    className="h-10 w-10 rounded-full border border-white/10 object-cover"
+                    alt={session.user?.name || "User"}
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-white">{session.user?.name}</p>
+                    <p className="text-xs text-slate-400">Signed in</p>
+                  </div>
+                </div>
+                <Button
+                  asChild
+                  className="w-full rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300"
+                >
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Go to Dashboard</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full border-white/12 bg-white/[0.03] text-slate-100 hover:bg-white/[0.06]"
+                  onClick={() => signOut()}
+                >
+                  Log Out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full rounded-full border-white/12 bg-white/[0.03] text-slate-100 hover:bg-white/[0.06]"
+                >
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="w-full rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300"
+                >
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Create an Account</Link>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </nav>

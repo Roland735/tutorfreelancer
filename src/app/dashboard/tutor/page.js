@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
 import {
   Wallet, Briefcase, Calendar, Star, TrendingUp,
   User, CheckCircle, Clock, BookOpen, ChevronRight, DollarSign, Loader2
@@ -95,10 +94,9 @@ export default function TutorDashboard() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen bg-background text-foreground font-sans">
-        <Navbar />
-        <div className="bg-muted/30 border-b border-border py-12">
-          <div className="container mx-auto px-4">
+      <div className="space-y-8">
+        <div className="rounded-3xl border border-border bg-muted/30 py-12">
+          <div className="px-4 sm:px-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-6">
                 <Skeleton className="h-16 w-16 rounded-full" />
@@ -111,7 +109,8 @@ export default function TutorDashboard() {
             </div>
           </div>
         </div>
-        <div className="container mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1 space-y-6">
             <Card><CardContent className="p-4"><Skeleton className="h-64 w-full" /></CardContent></Card>
             <Card><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>
@@ -139,12 +138,10 @@ export default function TutorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
-      <Navbar />
-
+    <div className="space-y-8">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-primary/10 to-purple-900/10 border-b border-border">
-        <div className="container mx-auto px-4 py-12">
+      <div className="rounded-3xl border border-border bg-gradient-to-r from-primary/10 to-purple-900/10">
+        <div className="px-4 py-12 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-center gap-6">
               <Avatar
@@ -207,7 +204,7 @@ export default function TutorDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1 space-y-6">

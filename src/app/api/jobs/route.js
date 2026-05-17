@@ -15,7 +15,7 @@ export async function POST(req) {
     const data = await req.json();
 
     // Basic validation
-    if (!data.title || !data.description || !data.category || !data.budget) {
+    if (!data.title || !data.description || !data.category || !data.budget || !data.subject) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
@@ -25,7 +25,11 @@ export async function POST(req) {
       ...data,
       postedBy: session.user.id,
       status: 'Open',
-      applicants: []
+        applicants: [],
+        location: {
+          city: data.city || "",
+          country: data.country || "Zimbabwe",
+        },
     });
 
     return NextResponse.json(job, { status: 201 });
@@ -46,6 +50,7 @@ export async function GET(req) {
     const sessionType = searchParams.get('type');
     const urgency = searchParams.get('urgency');
     const academicLevel = searchParams.get('level');
+    const city = searchParams.get('city');
     const keyword = searchParams.get('keyword');
     const subjectCode = searchParams.get('code');
     const sort = searchParams.get('sort') || 'newest';
@@ -61,6 +66,7 @@ export async function GET(req) {
     if (sessionType && sessionType !== 'Any') query.sessionType = sessionType;
     if (urgency && urgency !== 'Any') query.urgency = urgency;
     if (academicLevel && academicLevel !== 'Any') query.academicLevel = academicLevel;
+    if (city && city !== 'All') query['location.city'] = { $regex: city, $options: 'i' };
 
     if (budgetMin || budgetMax) {
       query['budget.min'] = {};

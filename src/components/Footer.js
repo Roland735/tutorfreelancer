@@ -52,7 +52,7 @@ export default function Footer() {
             <h4 className="text-foreground font-bold mb-6 font-heading">For Tutors</h4>
             <ul className="space-y-4 text-muted-foreground text-sm">
               <li><Link href="/jobs" className="hover:text-primary transition-colors">Browse Jobs</Link></li>
-              <li><Link href="/register" className="hover:text-primary transition-colors">Become a Tutor</Link></li>
+              <li><Link href="/signup" className="hover:text-primary transition-colors">Become a Tutor</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors">Tutor Resources</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors">Community Guidelines</Link></li>
             </ul>

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
 import {
   Users,
   Briefcase,
@@ -8,13 +7,9 @@ import {
   DollarSign,
   Search,
   Filter,
-  MoreVertical,
   CheckCircle,
   Ban,
   Trash2,
-  AlertTriangle,
-  LayoutDashboard,
-  LogOut,
   Settings,
   Download
 } from "lucide-react";
@@ -22,7 +17,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -274,72 +268,77 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border hidden md:block fixed h-full bg-card z-10">
-        <div className="p-6 border-b border-border">
-          <div className="text-2xl font-bold text-primary tracking-tighter font-heading">
-            TF<span className="text-foreground">Admin</span>
-          </div>
-        </div>
-        <nav className="p-4 space-y-2">
-          <Button
-            variant={activeTab === "overview" ? "default" : "ghost"}
-            className={cn("w-full justify-start gap-3", activeTab === "overview" ? "" : "text-muted-foreground")}
-            onClick={() => setActiveTab("overview")}
-          >
-            <LayoutDashboard className="w-4 h-4" /> Overview
-          </Button>
-          <Button
-            variant={activeTab === "users" ? "default" : "ghost"}
-            className={cn("w-full justify-start gap-3", activeTab === "users" ? "" : "text-muted-foreground")}
-            onClick={() => setActiveTab("users")}
-          >
-            <Users className="w-4 h-4" /> Users
-          </Button>
-          <Button
-            variant={activeTab === "jobs" ? "default" : "ghost"}
-            className={cn("w-full justify-start gap-3", activeTab === "jobs" ? "" : "text-muted-foreground")}
-            onClick={() => setActiveTab("jobs")}
-          >
-            <Briefcase className="w-4 h-4" /> Jobs
-          </Button>
-          <Button
-            variant={activeTab === "transactions" ? "default" : "ghost"}
-            className={cn("w-full justify-start gap-3", activeTab === "transactions" ? "" : "text-muted-foreground")}
-            onClick={() => setActiveTab("transactions")}
-          >
-            <DollarSign className="w-4 h-4" /> Transactions
-          </Button>
-          <div className="pt-4 mt-4 border-t border-border">
-            <Link href="/dashboard" className="w-full">
-              <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground">
-                <LogOut className="w-4 h-4" /> Back to App
-              </Button>
-            </Link>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 md:ml-64 p-8">
-        <header className="flex justify-between items-center mb-8">
+    <div className="space-y-8">
+      <section className="rounded-3xl border border-border bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 px-6 py-6 text-white shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold font-heading">Dashboard Overview</h1>
-            <p className="text-muted-foreground">Welcome back, Admin</p>
+            <p className="text-sm font-medium text-emerald-100/90">Platform Operations</p>
+            <h2 className="mt-2 text-2xl font-bold font-heading">University Tutor Marketplace Control Center</h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-200/85">
+              Oversee user activity, marketplace quality, payments, and trust signals across the platform.
+            </p>
           </div>
-          <div className="flex gap-4">
-            <Button variant="outline" className="gap-2">
+
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">
               <Settings className="w-4 h-4" /> Settings
             </Button>
-            <Button className="gap-2 shadow-lg shadow-primary/20">
+            <Button className="gap-2 bg-white text-slate-900 hover:bg-slate-100">
               <Download className="w-4 h-4" /> Download Report
             </Button>
           </div>
-        </header>
+        </div>
+      </section>
 
+      <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card/70 p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={activeTab === "overview" ? "default" : "ghost"}
+            className="rounded-2xl"
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </Button>
+          <Button
+            variant={activeTab === "users" ? "default" : "ghost"}
+            className="rounded-2xl"
+            onClick={() => setActiveTab("users")}
+          >
+            Users
+          </Button>
+          <Button
+            variant={activeTab === "jobs" ? "default" : "ghost"}
+            className="rounded-2xl"
+            onClick={() => setActiveTab("jobs")}
+          >
+            Jobs
+          </Button>
+          <Button
+            variant={activeTab === "transactions" ? "default" : "ghost"}
+            className="rounded-2xl"
+            onClick={() => setActiveTab("transactions")}
+          >
+            Payments
+          </Button>
+        </div>
+
+        <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
+          <div className="relative md:w-80">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search operations..." className="pl-10" />
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" size="icon" className="rounded-2xl">
+              <Filter className="w-4 h-4" />
+            </Button>
+            <Button className="rounded-2xl">Export Snapshot</Button>
+          </div>
+        </div>
+      </section>
+
+      <section>
         {renderContent()}
-      </main>
+      </section>
     </div>
   );
 }

@@ -113,3 +113,27 @@
   .transition-all-smooth {
     @apply transition-all duration-300 ease-in-out;
   }
+
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.65) rgba(15, 23, 42, 0.45);
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 9999px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.78), rgba(56, 189, 248, 0.78));
+  border: 2px solid rgba(2, 8, 23, 0.72);
+  border-radius: 9999px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.92), rgba(125, 211, 252, 0.92));
+}

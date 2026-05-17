@@ -27,13 +27,22 @@ export async function GET() {
       avatar: user.avatar || "",
       university: user.university || "",
       major: user.major || "",
+      yearOfStudy: user.yearOfStudy || "",
+      phoneNumber: user.phoneNumber || "",
+      referralCode: user.referralCode || "",
       bio: user.bio || "",
       location: user.location || {},
       languages: user.languages || [],
+      studentProfile: user.studentProfile || {},
       tutorProfile: tutorProfile
         ? {
           hourlyRate: tutorProfile.hourlyRate,
           sessionType: tutorProfile.sessionType,
+          academicLevel: tutorProfile.academicLevel || "",
+          yearsOfExperience: tutorProfile.yearsOfExperience || 0,
+          shortBio: tutorProfile.shortBio || "",
+          verificationStatus: tutorProfile.verificationStatus || "not_submitted",
+          verificationDocumentName: tutorProfile.verificationDocumentName || "",
           stats: tutorProfile.stats || {},
           subjects: tutorProfile.subjects || [],
           badges: tutorProfile.badges || [],
@@ -59,11 +68,21 @@ export async function PUT(req) {
     const city = body.city || "";
     const languages = Array.isArray(body.languages) ? body.languages : [];
     const name = body.name;
+    const avatar = body.avatar;
     const university = body.university;
     const major = body.major;
+    const yearOfStudy = body.yearOfStudy;
     const country = body.country;
     const hourlyRate = body.hourlyRate;
     const subjects = Array.isArray(body.subjects) ? body.subjects : [];
+    const phoneNumber = body.phoneNumber;
+    const referralCode = body.referralCode;
+    const studentProfile = body.studentProfile;
+    const academicLevel = body.academicLevel;
+    const yearsOfExperience = body.yearsOfExperience;
+    const sessionType = body.sessionType;
+    const shortBio = body.shortBio;
+    const verificationDocumentName = body.verificationDocumentName;
 
     if (!bio || !city || languages.length === 0) {
       return NextResponse.json({ message: "All fields are required." }, { status: 400 });
@@ -79,11 +98,29 @@ export async function PUT(req) {
     if (name) {
       user.name = name;
     }
+    if (avatar !== undefined) {
+      user.avatar = avatar;
+    }
     if (university) {
       user.university = university;
     }
     if (major) {
       user.major = major;
+    }
+    if (yearOfStudy !== undefined) {
+      user.yearOfStudy = yearOfStudy;
+    }
+    if (phoneNumber !== undefined) {
+      user.phoneNumber = phoneNumber;
+    }
+    if (referralCode !== undefined) {
+      user.referralCode = referralCode;
+    }
+    if (studentProfile && typeof studentProfile === "object") {
+      user.studentProfile = {
+        ...(user.studentProfile?.toObject?.() || user.studentProfile || {}),
+        ...studentProfile,
+      };
     }
 
     user.bio = bio;
@@ -104,7 +141,12 @@ export async function PUT(req) {
         tutorProfile = new TutorProfile({
           user: user._id,
           hourlyRate: rateNumber || 5,
-          sessionType: "Online",
+          sessionType: sessionType || "Online",
+          academicLevel: academicLevel || "",
+          yearsOfExperience: yearsOfExperience || 0,
+          shortBio: shortBio || "",
+          verificationDocumentName: verificationDocumentName || "",
+          verificationStatus: verificationDocumentName ? "pending" : "not_submitted",
           subjects: subjects.map((name) => ({
             name,
             category: "General",
@@ -114,6 +156,22 @@ export async function PUT(req) {
       } else {
         if (rateNumber != null && !Number.isNaN(rateNumber)) {
           tutorProfile.hourlyRate = rateNumber;
+        }
+        if (sessionType) {
+          tutorProfile.sessionType = sessionType;
+        }
+        if (academicLevel !== undefined) {
+          tutorProfile.academicLevel = academicLevel;
+        }
+        if (yearsOfExperience !== undefined) {
+          tutorProfile.yearsOfExperience = yearsOfExperience;
+        }
+        if (shortBio !== undefined) {
+          tutorProfile.shortBio = shortBio;
+        }
+        if (verificationDocumentName !== undefined) {
+          tutorProfile.verificationDocumentName = verificationDocumentName;
+          tutorProfile.verificationStatus = verificationDocumentName ? "pending" : "not_submitted";
         }
         if (subjects.length > 0) {
           tutorProfile.subjects = subjects.map((name) => ({

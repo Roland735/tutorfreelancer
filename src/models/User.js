@@ -39,8 +39,18 @@ const UserSchema = new mongoose.Schema({
   },
   yearOfStudy: {
     type: String,
-    enum: ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Masters', 'PhD', 'Alumni', ''],
+    enum: ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Masters', 'PhD', 'Alumni', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Postgraduate', 'Recent Graduate', ''],
     default: '',
+  },
+  phoneNumber: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  referralCode: {
+    type: String,
+    default: '',
+    trim: true,
   },
   bio: {
     type: String,
@@ -56,6 +66,26 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   }],
+  studentProfile: {
+    courseOfStudy: {
+      type: String,
+      default: '',
+    },
+    subjectsNeeded: [{
+      type: String,
+      trim: true,
+    }],
+    preferredTutoringMode: {
+      type: String,
+      enum: ['Online', 'In-Person', 'Both', ''],
+      default: '',
+    },
+    learningGoal: {
+      type: String,
+      default: '',
+      maxlength: 1000,
+    },
+  },
   isVerified: {
     type: Boolean,
     default: false,
