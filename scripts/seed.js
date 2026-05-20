@@ -14,6 +14,9 @@ import Category from '../src/models/Category.js';
 import Notification from '../src/models/Notification.js';
 import Transaction from '../src/models/Transaction.js';
 import Blog from '../src/models/Blog.js';
+import PlatformContent from '../src/models/PlatformContent.js';
+import WorkspaceState from '../src/models/WorkspaceState.js';
+import { PLATFORM_CONTENT_SEED } from '../src/lib/platform-content-defaults.js';
 
 // Configuration
 const CONFIG = {
@@ -45,6 +48,51 @@ const skillsList = [
   'Python', 'Java', 'Calculus', 'Organic Chemistry', 'React', 'Node.js',
   'Linear Algebra', 'Machine Learning', 'Statistics', 'Essay Writing',
   'Macroeconomics', 'Physics I', 'Thermodynamics', 'Data Structures', 'Algorithms'
+];
+
+const demoAccounts = [
+  {
+    name: 'Admin Demo',
+    email: 'admin@tutorfreelance.demo',
+    role: 'admin',
+    university: 'University of Zimbabwe',
+    major: 'Platform Operations',
+    yearOfStudy: 'Postgraduate',
+    city: 'Harare',
+    country: 'Zimbabwe',
+    timezone: 'Africa/Harare',
+    isVerified: true,
+    isOnline: true,
+    bio: 'Demo administrator for platform operations, moderation, payouts, and analytics.',
+  },
+  {
+    name: 'Student Demo',
+    email: 'student@tutorfreelance.demo',
+    role: 'student',
+    university: 'University of Zimbabwe',
+    major: 'Economics',
+    yearOfStudy: '3rd Year',
+    city: 'Harare',
+    country: 'Zimbabwe',
+    timezone: 'Africa/Harare',
+    isVerified: true,
+    isOnline: true,
+    bio: 'Demo student account for marketplace browsing, job posting, and applications.',
+  },
+  {
+    name: 'Tutor Demo',
+    email: 'tutor@tutorfreelance.demo',
+    role: 'tutor',
+    university: 'National University of Science and Technology',
+    major: 'Computer Science',
+    yearOfStudy: 'Recent Graduate',
+    city: 'Bulawayo',
+    country: 'Zimbabwe',
+    timezone: 'Africa/Harare',
+    isVerified: true,
+    isOnline: true,
+    bio: 'Demo tutor account for sessions, applications, earnings, and reviews.',
+  }
 ];
 
 const categoriesData = [
@@ -93,7 +141,9 @@ async function clearDatabase() {
     Category.deleteMany({}),
     Notification.deleteMany({}),
     Transaction.deleteMany({}),
-    Blog.deleteMany({})
+    Blog.deleteMany({}),
+    PlatformContent.deleteMany({}),
+    WorkspaceState.deleteMany({})
   ]);
   console.log('Database cleared.');
 }
@@ -151,6 +201,76 @@ async function seedUsersAndTutors() {
   const tutors = [];
 
   const password = await bcrypt.hash('password123', 10);
+
+  for (const account of demoAccounts) {
+    const user = new User({
+      name: account.name,
+      email: account.email,
+      password,
+      role: account.role,
+      avatar: faker.image.avatar(),
+      university: account.university,
+      major: account.major,
+      yearOfStudy: account.yearOfStudy,
+      bio: account.bio,
+      location: {
+        city: account.city,
+        country: account.country,
+        timezone: account.timezone,
+      },
+      languages: ['English'],
+      isVerified: account.isVerified,
+      isOnline: account.isOnline,
+      lastLogin: new Date(),
+      socialLinks: {
+        linkedin: `https://linkedin.com/in/${faker.lorem.slug()}`,
+        github: `https://github.com/${faker.lorem.slug()}`,
+      }
+    });
+
+    const savedUser = await user.save();
+    users.push(savedUser);
+
+    if (account.role === 'tutor') {
+      const tutorProfile = new TutorProfile({
+        user: savedUser._id,
+        subjects: [
+          { name: 'React', category: 'Computer Science', difficulty: 'Intermediate' },
+          { name: 'JavaScript', category: 'Computer Science', difficulty: 'Advanced' },
+        ],
+        hourlyRate: 25,
+        sessionType: 'Online',
+        availability: {
+          monday: [{ start: '09:00', end: '17:00' }],
+          wednesday: [{ start: '10:00', end: '18:00' }],
+          friday: [{ start: '09:00', end: '15:00' }]
+        },
+        stats: {
+          totalSessions: 18,
+          totalEarnings: 420,
+          completionRate: 97,
+          avgResponseTime: 12,
+          rating: 4.8,
+          reviewCount: 11
+        },
+        education: [{
+          institution: savedUser.university,
+          degree: savedUser.yearOfStudy,
+          field: savedUser.major,
+          startDate: faker.date.past({ years: 4 }),
+          endDate: faker.date.future({ years: 1 })
+        }],
+        badges: ['Top Rated', 'Verified'],
+        isFeatured: true
+      });
+
+      const savedTutor = await tutorProfile.save();
+      tutors.push(savedTutor);
+
+      savedUser.tutorProfile = savedTutor._id;
+      await savedUser.save();
+    }
+  }
 
   for (let i = 0; i < CONFIG.USERS_COUNT; i++) {
     const isTutor = i < CONFIG.TUTORS_COUNT;
@@ -372,6 +492,76 @@ async function seedNotifications(users) {
   }
 }
 
+async function seedPlatformContent() {
+  console.log('Seeding platform content...');
+  const entries = Object.entries(PLATFORM_CONTENT_SEED).map(([key, value]) => ({
+    key,
+    value,
+  }));
+
+  await PlatformContent.insertMany(entries);
+}
+
+async function seedWorkspaceStates(users) {
+  console.log('Seeding workspace states...');
+
+  const items = users.map((user, index) => ({
+    user: user._id,
+    settings: {
+      notifications: {
+        emailMessages: true,
+        pushApplications: true,
+        bookingReminders: true,
+        marketingUpdates: index % 3 === 0,
+      },
+      privacy: {
+        profileVisible: true,
+        showUniversity: true,
+        showLanguages: index % 5 !== 0,
+      },
+    },
+    walletMethods: [
+      {
+        type: 'EcoCash',
+        label: 'EcoCash',
+        details: `07${faker.number.int({ min: 11, max: 89 })} ${faker.number.int({ min: 100, max: 999 })} ${faker.number.int({ min: 1000, max: 9999 })}`,
+        status: index % 4 === 0 ? 'Verification pending' : 'Verified',
+        isPrimary: true,
+      },
+      {
+        type: 'Bank',
+        label: faker.helpers.arrayElement(['CBZ', 'Stanbic', 'First Capital Bank']),
+        details: `Account ending ${faker.number.int({ min: 1000, max: 9999 })}`,
+        status: 'Verified',
+        isPrimary: false,
+      },
+    ],
+    withdrawals: index % 6 === 0
+      ? [
+        {
+          amount: faker.number.int({ min: 20, max: 120 }),
+          status: 'Pending review',
+          createdAt: faker.date.recent(),
+        },
+      ]
+      : [],
+    manualReviews: [],
+    supportTickets: index % 8 === 0
+      ? [
+        {
+          subject: 'Payout follow-up',
+          category: 'Payments',
+          message: faker.lorem.sentence(),
+          status: 'Open',
+          createdAt: faker.date.recent(),
+        },
+      ]
+      : [],
+  }));
+
+  await WorkspaceState.insertMany(items);
+}
+
 async function main() {
   await connectDB();
   await clearDatabase();
@@ -383,6 +573,8 @@ async function main() {
   await seedMessages(users);
   await seedNotifications(users);
   await seedBlogs();
+  await seedPlatformContent();
+  await seedWorkspaceStates(users);
 
   console.log('Seeding completed successfully!');
   process.exit(0);

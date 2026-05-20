@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EarlyWarningSystem from "@/components/EarlyWarningSystem";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -1052,49 +1053,10 @@ export default function Home() {
 
         <section className="border-b border-white/6 bg-slate-950/95 py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-4 rounded-[30px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.95)] lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">
-                  <Brain className="h-3.5 w-3.5" />
-                  Early Warning Prediction
-                </div>
-                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                  Spot learning risk before students fall behind.
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-                  The platform analyzes session completion, cancellations, open
-                  requests, and engagement patterns to surface a clear risk level
-                  and practical next steps earlier.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/75 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Signals
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-white">
-                    Completion trends, cancellations, and open support requests
-                  </p>
-                </div>
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/75 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Output
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-white">
-                    Low, medium, or high risk with an engagement score
-                  </p>
-                </div>
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/75 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Action
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-white">
-                    Short recommendations to improve consistency early
-                  </p>
-                </div>
-              </div>
-            </div>
+            <EarlyWarningSystem
+              title="Spot learning risk before you fall behind"
+              description="Enter the module you are taking, add previous assessment marks, answer a short AI-generated quiz, and get a prediction, study advice, and tutor recommendations."
+            />
           </div>
         </section>
 

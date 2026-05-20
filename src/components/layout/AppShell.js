@@ -6,28 +6,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   Bell,
-  BookOpen,
-  BriefcaseBusiness,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CircleHelp,
-  FileCheck2,
-  GraduationCap,
-  LifeBuoy,
   LogOut,
   Menu,
   Search,
   Settings,
-  Shield,
   UserRound,
-  Users,
-  Wallet,
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/utils";
 import { WorkspaceModeProvider } from "@/components/layout/WorkspaceModeContext";
+import {
+  getAdminPageMeta,
+  getAdminSections,
+  getAdminSecondaryItems,
+} from "@/lib/admin-navigation";
 import {
   PAGE_META,
   STUDENT_NAV_SECTIONS,
@@ -35,65 +31,6 @@ import {
   TUTOR_NAV_SECTIONS,
   TUTOR_SECONDARY_ITEMS,
 } from "@/lib/dashboard-navigation";
-
-const ADMIN_SECTIONS = [
-  {
-    label: "Operations",
-    items: [
-      {
-        label: "Dashboard",
-        href: "/admin",
-        matchers: ["/admin"],
-        exact: true,
-        icon: Shield,
-      },
-      {
-        label: "Users",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: Users,
-      },
-      {
-        label: "Tutors",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: GraduationCap,
-      },
-      {
-        label: "Jobs",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: BriefcaseBusiness,
-      },
-      {
-        label: "Applications",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: FileCheck2,
-        badge: "9",
-      },
-      {
-        label: "Payments",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: Wallet,
-      },
-      {
-        label: "Reports",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: Bell,
-        badge: "3",
-      },
-      {
-        label: "Content",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: BookOpen,
-      },
-    ],
-  },
-];
 
 function resolveHref(href, role) {
   return typeof href === "function" ? href(role) : href;
@@ -125,14 +62,12 @@ function toTitleCase(value) {
 }
 
 function getPageMeta(pathname, roleScope) {
-  const pageMap = [
-    {
-      test: (value) => value === "/admin",
-      title: "Admin Control Center",
-      description: "Monitor platform activity, payments, applications, and account health.",
-    },
-    ...PAGE_META,
-  ];
+  const adminMeta = getAdminPageMeta(pathname);
+  if (adminMeta) {
+    return adminMeta;
+  }
+
+  const pageMap = [...PAGE_META];
 
   const match = pageMap.find((item) => item.test(pathname));
   if (match) {
@@ -204,31 +139,19 @@ function SidebarContent({
   pathname,
   collapsed,
   roleScope,
+  permissions,
   navMode,
   onModeChange,
   onNavigate,
   onToggleCollapse,
 }) {
   const sections = roleScope === "admin"
-    ? ADMIN_SECTIONS
+    ? getAdminSections(permissions)
     : navMode === "tutor"
       ? TUTOR_NAV_SECTIONS
       : STUDENT_NAV_SECTIONS;
   const secondaryItems = roleScope === "admin"
-    ? [
-      {
-        label: "Settings",
-        href: "/admin",
-        matchers: ["/admin"],
-        icon: Settings,
-      },
-      {
-        label: "Help",
-        href: "/about",
-        matchers: ["/about"],
-        icon: LifeBuoy,
-      },
-    ]
+    ? getAdminSecondaryItems(permissions)
     : navMode === "tutor"
       ? TUTOR_SECONDARY_ITEMS
       : STUDENT_SECONDARY_ITEMS;
@@ -237,7 +160,7 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 border-b border-white/10 px-4 py-5">
         <Link
-          href={roleScope === "admin" ? "/admin" : "/dashboard"}
+          href={roleScope === "admin" ? "/admin/dashboard" : "/dashboard"}
           className="flex min-w-0 flex-1 items-center gap-3"
           onClick={onNavigate}
         >
@@ -434,6 +357,7 @@ export default function AppShell({ children, roleScope = "user" }) {
   });
 
   const userRole = session?.user?.role === "admin" ? "admin" : session?.user?.role === "tutor" ? "tutor" : "student";
+  const adminPermissions = session?.user?.permissions || [];
   const displayName = session?.user?.name || (roleScope === "admin" ? "Administrator" : "Student");
   const pageMeta = useMemo(() => getPageMeta(pathname, roleScope), [pathname, roleScope]);
   const breadcrumbs = useMemo(() => buildBreadcrumbs(pathname), [pathname]);
@@ -473,7 +397,7 @@ export default function AppShell({ children, roleScope = "user" }) {
     }
 
     if (roleScope === "user" && session?.user?.role === "admin") {
-      router.replace("/admin");
+      router.replace("/admin/dashboard");
     }
   }, [roleScope, router, session, status]);
 
@@ -563,6 +487,7 @@ export default function AppShell({ children, roleScope = "user" }) {
             pathname={pathname}
             collapsed={isSidebarCollapsed}
             roleScope={roleScope}
+            permissions={adminPermissions}
             navMode={navMode}
             onModeChange={setStoredNavMode}
             onNavigate={() => setIsMobileSidebarOpen(false)}
@@ -686,7 +611,7 @@ export default function AppShell({ children, roleScope = "user" }) {
                           Profile
                         </Link>
                         <Link
-                          href={roleScope === "admin" ? "/admin" : "/settings"}
+                          href={roleScope === "admin" ? "/admin/settings" : "/settings"}
                           className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                         >
                           <Settings className="h-4 w-4" />
@@ -753,6 +678,7 @@ export default function AppShell({ children, roleScope = "user" }) {
               pathname={pathname}
               collapsed={false}
               roleScope={roleScope}
+              permissions={adminPermissions}
               navMode={navMode}
               onModeChange={setStoredNavMode}
               onNavigate={() => setIsMobileSidebarOpen(false)}

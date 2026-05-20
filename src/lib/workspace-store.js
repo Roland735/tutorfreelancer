@@ -1,3 +1,5 @@
+import WorkspaceState from "@/models/WorkspaceState";
+
 const DEFAULT_SETTINGS = {
   notifications: {
     emailMessages: true,
@@ -12,126 +14,94 @@ const DEFAULT_SETTINGS = {
   },
 };
 
-const DEFAULT_WALLET = {
-  methods: [
+async function getOrCreateWorkspaceState(userId) {
+  return WorkspaceState.findOneAndUpdate(
+    { user: userId },
+    {},
     {
-      id: "ecocash-primary",
-      type: "EcoCash",
-      label: "EcoCash",
-      details: "077 123 4567",
-      status: "Verification pending",
-      isPrimary: true,
-    },
-    {
-      id: "bank-fcb",
-      type: "Bank",
-      label: "First Capital Bank",
-      details: "Account ending 4281",
-      status: "Verified",
-      isPrimary: false,
-    },
-  ],
-  withdrawals: [],
-  reviews: [],
-  supportTickets: [],
-};
-
-function getStore() {
-  if (!globalThis.__workspaceStore) {
-    globalThis.__workspaceStore = {
-      settingsByUser: {},
-      walletByUser: {},
-    };
-  }
-
-  return globalThis.__workspaceStore;
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+    }
+  );
 }
 
-export function getWorkspacePreferences(userId) {
-  const store = getStore();
-
-  if (!store.settingsByUser[userId]) {
-    store.settingsByUser[userId] = structuredClone(DEFAULT_SETTINGS);
-  }
-
-  if (!store.walletByUser[userId]) {
-    store.walletByUser[userId] = structuredClone(DEFAULT_WALLET);
-  }
+export async function getWorkspacePreferences(userId) {
+  const state = await getOrCreateWorkspaceState(userId);
 
   return {
-    settings: store.settingsByUser[userId],
-    wallet: store.walletByUser[userId],
+    settings: state.settings || DEFAULT_SETTINGS,
+    wallet: {
+      methods: state.walletMethods || [],
+      withdrawals: state.withdrawals || [],
+      reviews: state.manualReviews || [],
+      supportTickets: state.supportTickets || [],
+    },
   };
 }
 
-export function saveWorkspaceSettings(userId, nextSettings) {
-  const store = getStore();
-  const { settings } = getWorkspacePreferences(userId);
+export async function saveWorkspaceSettings(userId, nextSettings) {
+  const state = await getOrCreateWorkspaceState(userId);
 
-  store.settingsByUser[userId] = {
+  state.settings = {
     notifications: {
-      ...settings.notifications,
+      ...(state.settings?.notifications || DEFAULT_SETTINGS.notifications),
       ...(nextSettings.notifications || {}),
     },
     privacy: {
-      ...settings.privacy,
+      ...(state.settings?.privacy || DEFAULT_SETTINGS.privacy),
       ...(nextSettings.privacy || {}),
     },
   };
 
-  return store.settingsByUser[userId];
+  await state.save();
+  return state.settings;
 }
 
-export function createWithdrawalRequest(userId, amount) {
-  const store = getStore();
-  const { wallet } = getWorkspacePreferences(userId);
+export async function createWithdrawalRequest(userId, amount) {
+  const state = await getOrCreateWorkspaceState(userId);
 
   const request = {
-    id: `withdrawal-${Date.now()}`,
-    amount: Number(amount),
+    amount: Number(amount || 0),
     status: "Pending review",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
-  wallet.withdrawals.unshift(request);
-  store.walletByUser[userId] = wallet;
+  state.withdrawals.unshift(request);
+  await state.save();
 
-  return request;
+  return state.withdrawals[0];
 }
 
-export function createSupportTicket(userId, payload) {
-  const store = getStore();
-  const { wallet } = getWorkspacePreferences(userId);
+export async function createSupportTicket(userId, payload) {
+  const state = await getOrCreateWorkspaceState(userId);
 
   const ticket = {
-    id: `ticket-${Date.now()}`,
     subject: payload.subject || "Support request",
     category: payload.category || "General",
     message: payload.message || "",
     status: "Open",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
-  wallet.supportTickets.unshift(ticket);
-  store.walletByUser[userId] = wallet;
+  state.supportTickets.unshift(ticket);
+  await state.save();
 
-  return ticket;
+  return state.supportTickets[0];
 }
 
-export function saveManualReview(userId, payload) {
-  const store = getStore();
-  const { wallet } = getWorkspacePreferences(userId);
+export async function saveManualReview(userId, payload) {
+  const state = await getOrCreateWorkspaceState(userId);
 
   const review = {
-    id: `manual-review-${Date.now()}`,
     rating: Number(payload.rating || 5),
     comment: payload.comment || "",
     targetName: payload.targetName || "Tutor",
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
 
-  wallet.reviews.unshift(review);
-  store.walletByUser[userId] = wallet;
+  state.manualReviews.unshift(review);
+  await state.save();
 
-  return review;
+  return state.manualReviews[0];
 }

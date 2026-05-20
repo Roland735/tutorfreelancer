@@ -17,6 +17,7 @@ import {
   saveManualReview,
   saveWorkspaceSettings,
 } from "@/lib/workspace-store";
+import { getPlatformContent } from "@/lib/platform-content";
 
 function conversationPreviewMap(messages, currentUserId) {
   const conversations = new Map();
@@ -176,7 +177,10 @@ export async function GET(request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const { settings, wallet } = getWorkspacePreferences(userId);
+    const [{ settings, wallet }, helpContent] = await Promise.all([
+      getWorkspacePreferences(userId),
+      getPlatformContent("page.help-support"),
+    ]);
     const currentUserId = String(userId);
 
     const conversationMap = conversationPreviewMap(rawMessages, currentUserId);
@@ -341,39 +345,49 @@ export async function GET(request) {
         averageRating,
         total: receivedReviews.length,
         items: receivedReviews,
-        manual: wallet.reviews,
+        manual: (wallet.reviews || []).map((review) => ({
+          id: String(review._id),
+          rating: review.rating,
+          comment: review.comment,
+          targetName: review.targetName,
+          createdAt: review.createdAt,
+        })),
       },
       wallet: {
         availableBalance: Math.max(totalEarnings - pendingBalance, 0),
         pendingBalance,
-        verificationStatus: "Partially verified",
-        methods: wallet.methods,
-        withdrawals: wallet.withdrawals,
+        verificationStatus: wallet.methods?.some((method) => method.status === "Verified")
+          ? "Verified payout method ready"
+          : "Verification pending",
+        methods: (wallet.methods || []).map((method) => ({
+          id: String(method._id),
+          type: method.type,
+          label: method.label,
+          details: method.details,
+          status: method.status,
+          isPrimary: method.isPrimary,
+        })),
+        withdrawals: (wallet.withdrawals || []).map((withdrawal) => ({
+          id: String(withdrawal._id),
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          createdAt: withdrawal.createdAt,
+        })),
         transactions: receivedTransactions.slice(0, 6),
       },
       settings,
       help: {
-        categories: ["Account", "Payments", "Bookings", "Safety", "Technical issue"],
-        faqs: [
-          {
-            question: "How do I know a tutor or student is trustworthy?",
-            answer: "Use profile completeness, university details, reviews, completed sessions, and message history before booking.",
-          },
-          {
-            question: "Can I tutor online and in-person?",
-            answer: "Yes. Jobs and tutor profiles support online, in-person, and flexible session types.",
-          },
-          {
-            question: "How do withdrawals work for Zimbabwe payouts?",
-            answer: "The starter wallet supports EcoCash and bank placeholders so the product can be extended with real payout verification later.",
-          },
-        ],
-        guidelines: [
-          "Keep all communication and agreements on-platform.",
-          "Avoid sharing private payment details before trust is established.",
-          "Report suspicious activity or abusive behavior immediately.",
-        ],
-        tickets: wallet.supportTickets,
+        categories: helpContent?.categories || [],
+        faqs: helpContent?.faqs || [],
+        guidelines: helpContent?.guidelines || [],
+        tickets: (wallet.supportTickets || []).map((ticket) => ({
+          id: String(ticket._id),
+          subject: ticket.subject,
+          category: ticket.category,
+          message: ticket.message,
+          status: ticket.status,
+          createdAt: ticket.createdAt,
+        })),
       },
       tutorProfile,
     });
@@ -430,22 +444,22 @@ export async function POST(request) {
     }
 
     if (action === "saveSettings") {
-      const settings = saveWorkspaceSettings(userId, payload);
+      const settings = await saveWorkspaceSettings(userId, payload);
       return NextResponse.json({ message: "Settings saved.", settings });
     }
 
     if (action === "submitSupport") {
-      const ticket = createSupportTicket(userId, payload);
+      const ticket = await createSupportTicket(userId, payload);
       return NextResponse.json({ message: "Support request submitted.", ticket });
     }
 
     if (action === "withdrawFunds") {
-      const requestItem = createWithdrawalRequest(userId, payload.amount || 0);
+      const requestItem = await createWithdrawalRequest(userId, payload.amount || 0);
       return NextResponse.json({ message: "Withdrawal request created.", request: requestItem });
     }
 
     if (action === "saveReview") {
-      const manualReview = saveManualReview(userId, payload);
+      const manualReview = await saveManualReview(userId, payload);
       return NextResponse.json({ message: "Review submitted.", review: manualReview });
     }
 

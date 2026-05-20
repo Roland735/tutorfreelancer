@@ -41,6 +41,22 @@ const TutorProfileSchema = new mongoose.Schema({
     enum: ['not_submitted', 'pending', 'verified'],
     default: 'not_submitted',
   },
+  moderationStatus: {
+    type: String,
+    enum: ['clear', 'pending', 'changes_requested', 'rejected'],
+    default: 'pending',
+    index: true,
+  },
+  moderationNotes: [{
+    type: String,
+    trim: true,
+  }],
+  riskLevel: {
+    type: String,
+    enum: ['Low', 'Medium', 'High'],
+    default: 'Low',
+    index: true,
+  },
   verificationDocumentName: {
     type: String,
     default: '',

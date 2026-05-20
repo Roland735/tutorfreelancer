@@ -29,6 +29,12 @@ const MessageSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  moderationStatus: {
+    type: String,
+    enum: ['clean', 'flagged', 'escalated'],
+    default: 'clean',
+    index: true,
+  },
 }, {
   timestamps: true,
 });

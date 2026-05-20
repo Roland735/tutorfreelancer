@@ -15,7 +15,8 @@ export async function GET(req) {
     
     // Find jobs where the applicants array contains an object with user: session.user.id
     const jobs = await Job.find({ 
-      'applicants.user': session.user.id 
+      'applicants.user': session.user.id,
+      moderationStatus: { $ne: 'removed' },
     })
     .populate("postedBy", "name avatar university")
     .sort({ "applicants.appliedAt": -1 })

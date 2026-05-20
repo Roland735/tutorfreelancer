@@ -37,6 +37,17 @@ const ReviewSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  moderationStatus: {
+    type: String,
+    enum: ['approved', 'flagged', 'hidden'],
+    default: 'approved',
+    index: true,
+  },
+  moderationReason: {
+    type: String,
+    default: '',
+    trim: true,
+  },
 }, {
   timestamps: true,
 });

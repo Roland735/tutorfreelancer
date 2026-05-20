@@ -11,22 +11,22 @@ export async function GET(req, { params }) {
     
     // First, try to find by User ID
     let tutor = await TutorProfile.findOne({ user: id })
-      .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline")
+      .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline accountStatus")
       .lean();
 
     // If not found, try to find by TutorProfile ID (fallback)
     if (!tutor) {
       tutor = await TutorProfile.findById(id)
-        .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline")
+        .populate("user", "name avatar university major location bio languages socialLinks createdAt isOnline accountStatus")
         .lean();
     }
 
-    if (!tutor) {
+    if (!tutor || tutor.moderationStatus === "rejected" || ["suspended", "deleted"].includes(tutor.user?.accountStatus)) {
       return NextResponse.json({ message: "Tutor not found" }, { status: 404 });
     }
 
     // Fetch reviews for this tutor
-    const reviews = await Review.find({ reviewee: tutor.user._id })
+    const reviews = await Review.find({ reviewee: tutor.user._id, moderationStatus: "approved" })
       .populate("reviewer", "name avatar")
       .sort({ createdAt: -1 })
       .limit(5)

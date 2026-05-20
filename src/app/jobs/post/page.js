@@ -9,23 +9,33 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 const DRAFT_KEY = "job-post-draft";
 
 export default function PostJobPage() {
   const router = useRouter();
+  const { content } = usePlatformContent(["lookups.marketplace"]);
+  const lookups = content["lookups.marketplace"] || {};
+  const categories = lookups.jobCategories || [];
+  const subjects = lookups.subjectOptions || [];
+  const academicLevels = lookups.jobAcademicLevels || [];
+  const sessionTypes = lookups.sessionTypes || [];
+  const durations = lookups.durations || [];
+  const cities = lookups.cities || [];
+  const urgencyOptions = ["Low", "Medium", "High", "Immediate"];
   const [form, setForm] = useState({
     title: "",
-    subject: "",
-    category: "Mathematics",
+    subject: lookups.subjectOptions?.[0] || "",
+    category: lookups.jobCategories?.[0] || "Mathematics",
     description: "",
     budgetMin: "",
     budgetMax: "",
     urgency: "Medium",
     sessionType: "Online",
     academicLevel: "Undergraduate",
-    duration: "1 hour",
-    city: "Harare",
+    duration: lookups.durations?.[0] || "1-3 months",
+    city: lookups.cities?.[0] || "Harare",
     subjectCode: "",
   });
   const [message, setMessage] = useState("");
@@ -41,6 +51,7 @@ export default function PostJobPage() {
 
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
+    setError("");
   }
 
   function saveDraft() {
@@ -53,8 +64,21 @@ export default function PostJobPage() {
     setError("");
     setMessage("");
 
-    if (!form.title || !form.subject || !form.description || !form.budgetMin) {
+    const trimmedTitle = form.title.trim();
+    const trimmedDescription = form.description.trim();
+    const minBudget = Number(form.budgetMin);
+    const maxBudget = form.budgetMax ? Number(form.budgetMax) : minBudget;
+
+    if (!trimmedTitle || !form.subject || !trimmedDescription || !form.budgetMin) {
       setError("Title, subject, description, and minimum budget are required.");
+      return;
+    }
+    if (Number.isNaN(minBudget) || minBudget <= 0) {
+      setError("Minimum budget must be greater than 0.");
+      return;
+    }
+    if (form.budgetMax && (Number.isNaN(maxBudget) || maxBudget < minBudget)) {
+      setError("Maximum budget must be greater than or equal to the minimum budget.");
       return;
     }
 
@@ -66,10 +90,10 @@ export default function PostJobPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: form.title,
+          title: trimmedTitle,
           subject: form.subject,
           category: form.category,
-          description: form.description,
+          description: trimmedDescription,
           subjectCode: form.subjectCode,
           academicLevel: form.academicLevel,
           urgency: form.urgency,
@@ -78,8 +102,8 @@ export default function PostJobPage() {
           city: form.city,
           budget: {
             type: "Hourly",
-            min: Number(form.budgetMin),
-            max: Number(form.budgetMax || form.budgetMin),
+            min: minBudget,
+            max: maxBudget,
           },
         }),
       });
@@ -113,11 +137,17 @@ export default function PostJobPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Title</label>
-                <Input value={form.title} onChange={(event) => updateField("title", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white" />
+                <Input value={form.title} onChange={(event) => updateField("title", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white" placeholder="e.g. Need help with Econometrics assignment" />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Subject</label>
-                <Input value={form.subject} onChange={(event) => updateField("subject", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white" />
+                <Select value={form.subject} onChange={(event) => updateField("subject", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
+                  {subjects.map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </Select>
               </div>
             </div>
 
@@ -125,36 +155,41 @@ export default function PostJobPage() {
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Category</label>
                 <Select value={form.category} onChange={(event) => updateField("category", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
-                  <option>Mathematics</option>
-                  <option>Computer Science</option>
-                  <option>Science</option>
-                  <option>Business</option>
-                  <option>Languages</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Academic level</label>
                 <Select value={form.academicLevel} onChange={(event) => updateField("academicLevel", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
-                  <option>Undergraduate</option>
-                  <option>Graduate</option>
-                  <option>High School</option>
+                  {academicLevels.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Urgency</label>
                 <Select value={form.urgency} onChange={(event) => updateField("urgency", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                  <option>Immediate</option>
+                  {urgencyOptions.map((urgency) => (
+                    <option key={urgency} value={urgency}>
+                      {urgency}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Session type</label>
                 <Select value={form.sessionType} onChange={(event) => updateField("sessionType", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
-                  <option>Online</option>
-                  <option>In-Person</option>
-                  <option>Both</option>
+                  {sessionTypes.map((sessionType) => (
+                    <option key={sessionType} value={sessionType}>
+                      {sessionType}
+                    </option>
+                  ))}
                 </Select>
               </div>
             </div>
@@ -175,11 +210,23 @@ export default function PostJobPage() {
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Duration</label>
-                <Input value={form.duration} onChange={(event) => updateField("duration", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white" />
+                <Select value={form.duration} onChange={(event) => updateField("duration", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
+                  {durations.map((duration) => (
+                    <option key={duration} value={duration}>
+                      {duration}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">City</label>
-                <Input value={form.city} onChange={(event) => updateField("city", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white" />
+                <Select value={form.city} onChange={(event) => updateField("city", event.target.value)} className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white">
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">Subject code</label>

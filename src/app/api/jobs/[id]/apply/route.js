@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from "@/lib/db";
 import Job from "@/models/Job";
+import User from "@/models/User";
 
 export async function POST(req, { params }) {
   try {
@@ -20,9 +21,15 @@ export async function POST(req, { params }) {
 
     await dbConnect();
 
-    const job = await Job.findById(id);
-    if (!job) {
+    const [job, applicant] = await Promise.all([
+      Job.findById(id),
+      User.findById(session.user.id).select("accountStatus role"),
+    ]);
+    if (!job || job.moderationStatus !== "visible" || job.status !== "Open") {
       return NextResponse.json({ message: "Job not found" }, { status: 404 });
+    }
+    if (!applicant || ["suspended", "deleted"].includes(applicant.accountStatus)) {
+      return NextResponse.json({ message: "Your account cannot apply to jobs." }, { status: 403 });
     }
 
     // Check if already applied

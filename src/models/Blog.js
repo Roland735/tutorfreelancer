@@ -41,6 +41,12 @@ const BlogSchema = new mongoose.Schema({
     default: 5,
   },
   tags: [String],
+  status: {
+    type: String,
+    enum: ['draft', 'published'],
+    default: 'published',
+    index: true,
+  },
 }, {
   timestamps: true,
 });

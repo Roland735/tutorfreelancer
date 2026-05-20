@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { ArrowLeft, GraduationCap, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 export default function PrivacyPage() {
+  const { content } = usePlatformContent(["page.privacy"]);
+  const pageContent = content["page.privacy"] || {};
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.16),_transparent_30%),linear-gradient(135deg,_#020617_0%,_#0f172a_48%,_#111827_100%)]" />
@@ -19,7 +23,7 @@ export default function PrivacyPage() {
           </Link>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-100">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
-            Legal placeholder
+            {pageContent.statusLabel || "Database-backed legal content"}
           </div>
         </div>
 
@@ -31,31 +35,18 @@ export default function PrivacyPage() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-400">TutorFreelancer</p>
-                <h1 className="text-3xl font-semibold text-white">Privacy Policy</h1>
+                <h1 className="text-3xl font-semibold text-white">{pageContent.title || "Privacy Policy"}</h1>
               </div>
             </div>
 
             <p className="text-sm leading-7 text-slate-300">
-              This placeholder page keeps the signup journey complete and avoids broken links.
-              Replace it with your production privacy policy before launch.
+              {pageContent.intro}
             </p>
 
             <div className="space-y-4 text-sm leading-7 text-slate-300">
-              <p>
-                TutorFreelancer collects account details such as name, email, role, university,
-                city, languages, and onboarding preferences so the platform can create user
-                accounts, improve trust, personalize student or tutor experiences, and support
-                future verification workflows.
-              </p>
-              <p>
-                Platform data should be stored securely, processed only for legitimate academic
-                marketplace operations, and shared only where necessary for authentication,
-                compliance, moderation, and service delivery.
-              </p>
-              <p>
-                Add your final policies for data retention, cookies, third-party providers, user
-                rights, contact information, and deletion requests here.
-              </p>
+              {(pageContent.paragraphs || []).map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </div>
           </CardContent>
         </Card>

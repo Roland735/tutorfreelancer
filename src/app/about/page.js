@@ -4,41 +4,17 @@ import Link from "next/link";
 import { GraduationCap, Globe, Users, Handshake, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 export default function AboutPage() {
-  const teamMembers = [
-    {
-      name: "Alex Johnson",
-      role: "Co-Founder & CEO",
-      image: "https://i.pravatar.cc/150?u=alex",
-      bio: "Former educator passionate about democratizing access to quality education.",
-    },
-    {
-      name: "Maria Rodriguez",
-      role: "CTO",
-      image: "https://i.pravatar.cc/150?u=maria",
-      bio: "Tech veteran with a background in ed-tech startups and AI.",
-    },
-    {
-      name: "David Kim",
-      role: "Head of Community",
-      image: "https://i.pravatar.cc/150?u=david",
-      bio: "Community builder focused on creating safe and engaging learning environments.",
-    },
-    {
-      name: "Sarah Jenkins",
-      role: "Lead Designer",
-      image: "https://i.pravatar.cc/150?u=sarahj",
-      bio: "UX expert dedicated to making learning intuitive and accessible for everyone.",
-    },
-  ];
-
-  const stats = [
-    { label: "Active Tutors", value: "5,000+", icon: <GraduationCap className="w-8 h-8" /> },
-    { label: "Students Helped", value: "50,000+", icon: <Users className="w-8 h-8" /> },
-    { label: "Countries", value: "120+", icon: <Globe className="w-8 h-8" /> },
-    { label: "Sessions Completed", value: "250k+", icon: <Handshake className="w-8 h-8" /> },
-  ];
+  const { content } = usePlatformContent(["page.about"]);
+  const about = content["page.about"] || {};
+  const teamMembers = about.teamMembers || [];
+  const iconComponents = [GraduationCap, Users, Globe, Handshake];
+  const stats = (about.stats || []).map((stat, index) => ({
+    ...stat,
+    icon: React.createElement(iconComponents[index] || GraduationCap, { className: "w-8 h-8" }),
+  }));
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -47,15 +23,15 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-background z-0"></div>
         <div className="max-w-7xl mx-auto text-center relative z-10 animate-in fade-in zoom-in duration-700">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 font-heading tracking-tight">
-            Empowering <span className="text-primary">Global Learning</span>
+            {about.hero?.title || "Building trust in university tutoring"}
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-            We're on a mission to connect curious minds with expert tutors, creating a world where quality education is accessible to everyone, everywhere.
+            {about.hero?.description}
           </p>
           <div className="flex justify-center gap-4">
-            <Link href="/signup">
+            <Link href={about.hero?.ctaHref || "/signup"}>
               <Button size="lg" className="rounded-full px-8 shadow-xl shadow-primary/20 text-lg h-14 gap-2">
-                Join Our Mission <ArrowRight className="w-5 h-5" />
+                {about.hero?.ctaLabel || "Join Our Mission"} <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
           </div>
@@ -67,17 +43,16 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div className="animate-in slide-in-from-left-8 duration-700">
             <h2 className="text-3xl font-bold mb-6 text-primary font-heading">Our Story</h2>
-            <p className="text-muted-foreground mb-4 leading-relaxed text-lg">
-              TutorFreelancer started in a university dorm room in 2023. We realized that while talent is universal, opportunity is not. Students were struggling to find help, and talented tutors were struggling to find students.
-            </p>
-            <p className="text-muted-foreground leading-relaxed text-lg">
-              What began as a simple bulletin board for campus tutoring has grown into a global community. We believe that peer-to-peer learning is the most effective way to master new skills, and we're building the infrastructure to make it happen seamlessly.
-            </p>
+            {(about.story?.paragraphs || []).map((paragraph) => (
+              <p key={paragraph} className="text-muted-foreground mb-4 leading-relaxed text-lg">
+                {paragraph}
+              </p>
+            ))}
           </div>
           <div className="relative animate-in slide-in-from-right-8 duration-700 delay-200">
             <div className="absolute -inset-4 bg-primary/20 rounded-2xl blur-xl"></div>
             <img
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src={about.story?.image}
               alt="Team working together"
               className="relative rounded-2xl shadow-2xl border border-border"
             />
@@ -135,11 +110,9 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-muted-foreground uppercase tracking-widest text-sm font-semibold mb-8">Trusted by students from</p>
           <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="text-2xl font-serif font-bold text-foreground">Harvard</div>
-            <div className="text-2xl font-serif font-bold text-foreground">Stanford</div>
-            <div className="text-2xl font-serif font-bold text-foreground">MIT</div>
-            <div className="text-2xl font-serif font-bold text-foreground">Oxford</div>
-            <div className="text-2xl font-serif font-bold text-foreground">Cambridge</div>
+            {(about.universityPartners || []).map((item) => (
+              <div key={item} className="text-2xl font-serif font-bold text-foreground">{item}</div>
+            ))}
           </div>
         </div>
       </section>
@@ -147,19 +120,19 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-24 px-4 bg-primary/10 border-t border-primary/20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6 text-foreground font-heading">Ready to join the future of learning?</h2>
+          <h2 className="text-4xl font-bold mb-6 text-foreground font-heading">{about.cta?.title}</h2>
           <p className="text-xl text-muted-foreground mb-10">
-            Whether you want to learn something new or share your expertise, there's a place for you here.
+            {about.cta?.description}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/signup?role=student">
+            <Link href={about.cta?.studentHref || "/signup?role=student"}>
               <Button variant="secondary" size="lg" className="rounded-full px-8 text-lg h-14 shadow-lg">
-                Start Learning
+                {about.cta?.studentLabel || "Start Learning"}
               </Button>
             </Link>
-            <Link href="/signup?role=tutor">
+            <Link href={about.cta?.tutorHref || "/signup?role=tutor"}>
               <Button size="lg" className="rounded-full px-8 text-lg h-14 shadow-lg shadow-primary/20">
-                Become a Tutor
+                {about.cta?.tutorLabel || "Become a Tutor"}
               </Button>
             </Link>
           </div>

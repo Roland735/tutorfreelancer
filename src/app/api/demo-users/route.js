@@ -10,7 +10,14 @@ export async function GET(request) {
   const user = await User.findOne(query).select("email role").sort({ createdAt: -1 });
 
   if (!user) {
-    return Response.json({ message: "No seeded user found" }, { status: 404 });
+    return Response.json(
+      {
+        message: role
+          ? `No seeded ${role} user found. Run "npm run bootstrap:admin" for admin, rerun the seed script, or create a ${role} account manually.`
+          : 'No seeded user found. Rerun the seed script or create a demo account manually.',
+      },
+      { status: 404 }
+    );
   }
 
   return Response.json({

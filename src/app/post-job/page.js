@@ -14,10 +14,14 @@ import { Select } from "@/components/ui/Select";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 export default function PostJobPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { content } = usePlatformContent(["lookups.marketplace", "page.jobPosting"]);
+  const lookups = content["lookups.marketplace"] || {};
+  const pageContent = content["page.jobPosting"] || {};
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,16 +40,12 @@ export default function PostJobPage() {
     urgency: "Medium",
   });
 
-  const categories = [
-    "Mathematics", "Computer Science", "Physics", "Chemistry",
-    "Biology", "English", "History", "Foreign Languages", "Engineering", "Business", "Economics", "Psychology"
-  ];
-
-  const academicLevels = ["High School", "Undergraduate", "Graduate", "PhD"];
-  const budgetTypes = ["Fixed", "Hourly"];
-  const sessionTypes = ["Online", "In-Person", "Both"];
-  const urgencies = ["Low", "Medium", "High", "Urgent"];
-  const durations = ["Less than 1 month", "1-3 months", "3-6 months", "More than 6 months"];
+  const categories = lookups.jobCategories || [];
+  const academicLevels = lookups.jobAcademicLevels || [];
+  const budgetTypes = lookups.budgetTypes || [];
+  const sessionTypes = lookups.sessionTypes || [];
+  const urgencies = lookups.urgencies || [];
+  const durations = lookups.durations || [];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -137,8 +137,8 @@ export default function PostJobPage() {
 
       <main className="flex-grow container mx-auto px-4 py-12 max-w-4xl">
         <div className="mb-8 text-center md:text-left">
-          <h1 className="text-3xl font-bold font-display mb-2">Post a New Job</h1>
-          <p className="text-muted-foreground">Follow the steps to create your job listing and find the perfect tutor.</p>
+          <h1 className="text-3xl font-bold font-display mb-2">{pageContent.title || "Post a New Job"}</h1>
+          <p className="text-muted-foreground">{pageContent.description || "Follow the steps to create your job listing and find the perfect tutor."}</p>
         </div>
 
         {/* Progress Bar */}

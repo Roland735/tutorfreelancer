@@ -28,6 +28,7 @@ import WorkspaceLoading from "@/components/dashboard/WorkspaceLoading";
 import { useWorkspaceMode } from "@/components/layout/WorkspaceModeContext";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import EarlyWarningSystem from "@/components/EarlyWarningSystem";
 
 function StudentDashboard({ data }) {
   const { overview, profileSummary, applications, notifications } = data;
@@ -59,6 +60,12 @@ function StudentDashboard({ data }) {
         <MetricCard label="Upcoming Bookings" value={studentOverview.stats.upcomingBookings} helper="Scheduled study sessions ahead" icon={CalendarClock} accent="sky" />
         <MetricCard label="Unread Messages" value={studentOverview.stats.unreadMessages} helper="Conversations that need a response" icon={MessageSquare} accent="emerald" />
       </div>
+
+      <EarlyWarningSystem
+        compact
+        title="Academic early warning"
+        description="Use your current module, past marks, and a short AI quiz to get a personalised prediction, practical study actions, and relevant tutor recommendations."
+      />
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <SectionCard

@@ -20,19 +20,24 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
-
-const trustMetrics = [
-  { value: "18k+", label: "Students supported", icon: Users },
-  { value: "4.9/5", label: "Average session rating", icon: ShieldCheck },
-  { value: "65k+", label: "Tutoring sessions completed", icon: BookOpenText },
-];
-
-const demoRoles = ["student", "tutor", "admin"];
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
+  const { content } = usePlatformContent(["page.login"]);
+  const pageContent = content["page.login"] || {};
+  const trustMetrics = (pageContent.trustMetrics || []).map((metric, index) => ({
+    ...metric,
+    icon: [Users, ShieldCheck, BookOpenText][index] || Users,
+  }));
+  const demoRoles = pageContent.demoRoles || [
+    { role: "student", label: "Load Student Account" },
+    { role: "tutor", label: "Load Tutor Account" },
+    { role: "admin", label: "Load Admin Account" },
+  ];
+  const authContent = pageContent.auth || {};
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,7 +116,7 @@ function LoginContent() {
                 </span>
               </Link>
               <div className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 sm:block">
-                Secure sign-in
+                {authContent.badge || "Secure sign-in"}
               </div>
             </div>
 
@@ -119,14 +124,14 @@ function LoginContent() {
               <div className="border-b border-white/10 bg-white/[0.03] px-6 py-6 sm:px-8 sm:py-8">
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Welcome back
+                  {authContent.eyebrow || "Welcome back"}
                 </div>
                 <div className="space-y-3">
                   <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                    Sign in to your academic workspace
+                    {authContent.title || "Sign in to your academic workspace"}
                   </h1>
                   <p className="max-w-lg text-sm leading-6 text-slate-300 sm:text-base">
-                    Return to a calm, secure platform built for university students who teach, learn, and collaborate with confidence.
+                    {authContent.description || "Return to a calm, secure platform built for university students who teach, learn, and collaborate with confidence."}
                   </p>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-3 text-xs text-slate-300">
@@ -232,17 +237,17 @@ function LoginContent() {
                     <div className="text-xs text-slate-500">Useful for previews and QA</div>
                   </div>
                   <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {demoRoles.map((role) => (
+                    {demoRoles.map((item) => (
                       <Button
-                        key={role}
+                        key={item.role}
                         type="button"
                         variant="outline"
                         size="sm"
                         disabled={demoLoading || loading}
-                        onClick={() => handleFill(role)}
+                        onClick={() => handleFill(item.role)}
                         className="h-11 rounded-xl border-white/12 bg-white/5 text-sm capitalize text-slate-100 hover:bg-white/10"
                       >
-                        {demoLoading ? "Loading..." : `${role} demo`}
+                        {demoLoading ? "Loading..." : item.label}
                       </Button>
                     ))}
                   </div>
@@ -348,7 +353,7 @@ function LoginContent() {
                 <CardContent className="p-8">
                   <Quote className="h-9 w-9 text-sky-200/75" />
                   <p className="mt-6 max-w-2xl text-2xl font-medium leading-10 text-white">
-                    "I found a tutor who had taken the exact same econometrics course at my university. The platform felt professional from the moment I logged in."
+                    &quot;I found a tutor who had taken the exact same econometrics course at my university. The platform felt professional from the moment I logged in.&quot;
                   </p>
                   <div className="mt-8 flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-300 to-emerald-300 text-lg font-semibold text-slate-950 shadow-lg">

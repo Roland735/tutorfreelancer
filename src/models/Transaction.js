@@ -47,6 +47,12 @@ const TransactionSchema = new mongoose.Schema({
     enum: ['Credit Card', 'PayPal', 'Stripe'],
     default: 'Stripe',
   },
+  payoutStatus: {
+    type: String,
+    enum: ['queued', 'processed', 'review'],
+    default: 'queued',
+    index: true,
+  },
 }, {
   timestamps: true,
 });

@@ -6,7 +6,7 @@ import User from "@/models/User";
 export async function GET() {
   try {
     await dbConnect();
-    const reviews = await Review.find({ rating: { $gte: 4 } })
+    const reviews = await Review.find({ rating: { $gte: 4 }, moderationStatus: "approved" })
       .populate("reviewer", "name avatar university role")
       .populate({
         path: "session",

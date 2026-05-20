@@ -26,34 +26,7 @@ import {
 } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
-
-const CITY_SUGGESTIONS = [
-  "Harare",
-  "Bulawayo",
-  "Mutare",
-  "Gweru",
-  "Masvingo",
-  "Chinhoyi",
-];
-
-const LANGUAGE_SUGGESTIONS = ["English", "Shona", "Ndebele", "Xitsonga"];
-const UNIVERSITY_SUGGESTIONS = [
-  "University of Zimbabwe",
-  "NUST",
-  "HIT",
-  "Midlands State University",
-  "Chinhoyi University of Technology",
-  "Great Zimbabwe University",
-];
-const YEAR_OPTIONS = ["Freshman", "Sophomore", "Junior", "Senior", "Masters", "PhD"];
-
-const TRUST_POINTS = [
-  "Helps students trust that you are a real university peer.",
-  "Improves matching for tutoring requests and study support.",
-  "Makes your profile easier to discover by city and language.",
-  "Gives you a stronger first impression before messages start.",
-  "Can be updated later anytime from your dashboard.",
-];
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 function parseLanguages(value) {
   return value
@@ -107,6 +80,13 @@ export default function ProfileSetupPage() {
   const { status } = useSession();
   const router = useRouter();
   const redirect = "/dashboard";
+  const { content } = usePlatformContent(["page.profileSetup"]);
+  const pageContent = content["page.profileSetup"] || {};
+  const CITY_SUGGESTIONS = pageContent.citySuggestions || [];
+  const LANGUAGE_SUGGESTIONS = pageContent.languageSuggestions || [];
+  const UNIVERSITY_SUGGESTIONS = pageContent.universitySuggestions || [];
+  const YEAR_OPTIONS = pageContent.yearOptions || [];
+  const TRUST_POINTS = pageContent.trustPoints || [];
 
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");

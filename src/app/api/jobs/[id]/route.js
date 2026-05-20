@@ -10,11 +10,11 @@ export async function GET(req, { params }) {
     const { id } = await params;
 
     const job = await Job.findById(id)
-      .populate("postedBy", "name avatar university location createdAt role")
+      .populate("postedBy", "name avatar university location createdAt role accountStatus")
       .populate("applicants.user", "name avatar")
       .lean();
 
-    if (!job) {
+    if (!job || job.moderationStatus !== "visible" || ["suspended", "deleted"].includes(job.postedBy?.accountStatus)) {
       return NextResponse.json({ message: "Job not found" }, { status: 404 });
     }
 
@@ -25,7 +25,8 @@ export async function GET(req, { params }) {
     const similarJobs = await Job.find({
       category: job.category,
       _id: { $ne: job._id },
-      status: 'Open'
+      status: 'Open',
+      moderationStatus: 'visible'
     })
       .select('title description budget academicLevel urgency sessionType applicants postedBy createdAt')
       .populate('postedBy', 'name avatar university')

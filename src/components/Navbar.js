@@ -6,12 +6,28 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { content } = usePlatformContent(["site.navigation"]);
+  const navigation = content["site.navigation"] || {};
+  const navLinks = navigation.links || [];
+  const brand = navigation.brand || {
+    name: "TutorFreelance",
+    tagline: "Zimbabwe Tutor Marketplace",
+  };
+  const authLabels = navigation.auth || {
+    loginLabel: "Log In",
+    signupLabel: "Join Now",
+    mobileSignupLabel: "Create an Account",
+    dashboardLabel: "Dashboard",
+    mobileDashboardLabel: "Go to Dashboard",
+    logoutLabel: "Log Out",
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,14 +36,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const navLinks = [
-    { name: "Find Tutors", href: "/tutors" },
-    { name: "Live Requests", href: "/#marketplace" },
-    { name: "Subjects", href: "/#categories" },
-    { name: "How It Works", href: "/#how-it-works" },
-    { name: "Pricing", href: "/#pricing" },
-  ];
 
   const navShell = scrolled
     ? "border-white/10 bg-slate-950/78 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.95)] backdrop-blur-xl"
@@ -45,10 +53,10 @@ export default function Navbar() {
           </div>
           <div className="leading-tight">
             <span className="block font-heading text-base font-semibold tracking-tight sm:text-lg">
-              TutorFreelance
+              {brand.name}
             </span>
             <span className="block text-[11px] uppercase tracking-[0.22em] text-slate-400">
-              Student Talent Network
+              {brand.tagline}
             </span>
           </div>
         </Link>
@@ -80,14 +88,14 @@ export default function Navbar() {
                 onClick={() => signOut()}
                 className="rounded-full px-4 text-slate-200 hover:bg-white/8 hover:text-white"
               >
-                Log Out
+                {authLabels.logoutLabel}
               </Button>
               <Button
                 asChild
                 size="sm"
                 className="rounded-full border border-emerald-300/20 bg-emerald-400 px-5 text-slate-950 shadow-[0_18px_40px_-20px_rgba(16,185,129,0.8)] hover:bg-emerald-300"
               >
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">{authLabels.dashboardLabel}</Link>
               </Button>
             </>
           ) : (
@@ -98,14 +106,14 @@ export default function Navbar() {
                 size="sm"
                 className="rounded-full px-4 text-slate-200 hover:bg-white/8 hover:text-white"
               >
-                <Link href="/login">Log In</Link>
+                <Link href="/login">{authLabels.loginLabel}</Link>
               </Button>
               <Button
                 asChild
                 size="sm"
                 className="rounded-full border border-emerald-300/20 bg-emerald-400 px-5 text-slate-950 shadow-[0_18px_40px_-20px_rgba(16,185,129,0.8)] hover:bg-emerald-300"
               >
-                <Link href="/signup">Join Now</Link>
+                <Link href="/signup">{authLabels.signupLabel}</Link>
               </Button>
             </>
           )}
@@ -154,14 +162,14 @@ export default function Navbar() {
                   asChild
                   className="w-full rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300"
                 >
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Go to Dashboard</Link>
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>{authLabels.mobileDashboardLabel}</Link>
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full rounded-full border-white/12 bg-white/[0.03] text-slate-100 hover:bg-white/[0.06]"
                   onClick={() => signOut()}
                 >
-                  Log Out
+                  {authLabels.logoutLabel}
                 </Button>
               </div>
             ) : (
@@ -171,13 +179,13 @@ export default function Navbar() {
                   variant="outline"
                   className="w-full rounded-full border-white/12 bg-white/[0.03] text-slate-100 hover:bg-white/[0.06]"
                 >
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>{authLabels.loginLabel}</Link>
                 </Button>
                 <Button
                   asChild
                   className="w-full rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300"
                 >
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Create an Account</Link>
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>{authLabels.mobileSignupLabel}</Link>
                 </Button>
               </div>
             )}

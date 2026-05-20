@@ -90,6 +90,21 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  accountStatus: {
+    type: String,
+    enum: ['active', 'pending', 'suspended', 'deleted'],
+    default: 'active',
+    index: true,
+  },
+  suspendedReason: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  suspendedAt: {
+    type: Date,
+    default: null,
+  },
   isOnline: {
     type: Boolean,
     default: false,

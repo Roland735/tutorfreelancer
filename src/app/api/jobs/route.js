@@ -21,15 +21,21 @@ export async function POST(req) {
 
     await dbConnect();
 
+    const owner = await User.findById(session.user.id).select("accountStatus");
+    if (!owner || owner.accountStatus === "suspended" || owner.accountStatus === "deleted") {
+      return NextResponse.json({ message: "Your account cannot post jobs." }, { status: 403 });
+    }
+
     const job = await Job.create({
       ...data,
       postedBy: session.user.id,
       status: 'Open',
-        applicants: [],
-        location: {
-          city: data.city || "",
-          country: data.country || "Zimbabwe",
-        },
+      moderationStatus: 'visible',
+      applicants: [],
+      location: {
+        city: data.city || "",
+        country: data.country || "Zimbabwe",
+      },
     });
 
     return NextResponse.json(job, { status: 201 });
@@ -60,7 +66,7 @@ export async function GET(req) {
     const limit = parseInt(searchParams.get('limit')) || 12;
     const skip = (page - 1) * limit;
 
-    const query = { status: 'Open' };
+    const query = { status: 'Open', moderationStatus: 'visible' };
 
     if (category && category !== 'All') query.category = category;
     if (sessionType && sessionType !== 'Any') query.sessionType = sessionType;
@@ -128,28 +134,33 @@ export async function GET(req) {
     let total;
 
     if (sort === 'applicants') {
-       // Aggregation pipeline for applicants sort
-       const pipeline = [
-         { $match: query },
-         { $addFields: { applicantsCount: { $size: "$applicants" } } },
-         { $sort: { applicantsCount: -1 } },
-         { $skip: skip },
-         { $limit: limit },
-         { $lookup: { from: 'users', localField: 'postedBy', foreignField: '_id', as: 'postedBy' } },
-         { $unwind: '$postedBy' } // Populate simulation
-       ];
-       // We need a separate count
-       total = await Job.countDocuments(query);
-       jobs = await Job.aggregate(pipeline);
+      // Aggregation pipeline for applicants sort
+      const pipeline = [
+        { $match: query },
+        { $addFields: { applicantsCount: { $size: "$applicants" } } },
+        { $sort: { applicantsCount: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        { $lookup: { from: 'users', localField: 'postedBy', foreignField: '_id', as: 'postedBy' } },
+        { $unwind: '$postedBy' } // Populate simulation
+      ];
+      // We need a separate count
+      total = await Job.countDocuments(query);
+      jobs = await Job.aggregate(pipeline);
     } else {
-       total = await Job.countDocuments(query);
-       jobs = await Job.find(query)
-        .populate("postedBy", "name avatar university")
+      total = await Job.countDocuments(query);
+      jobs = await Job.find(query)
+        .populate("postedBy", "name avatar university accountStatus")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
         .lean();
     }
+
+    jobs = jobs.filter((job) => {
+      const status = job.postedBy?.accountStatus;
+      return !status || (status !== "suspended" && status !== "deleted");
+    });
 
     return NextResponse.json({
       jobs,

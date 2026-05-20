@@ -92,6 +92,21 @@ const JobSchema = new mongoose.Schema({
     default: 'Open',
     index: true,
   },
+  moderationStatus: {
+    type: String,
+    enum: ['visible', 'under_review', 'hidden', 'removed'],
+    default: 'visible',
+    index: true,
+  },
+  moderationNotes: [{
+    type: String,
+    trim: true,
+  }],
+  attachments: [{
+    filename: String,
+    url: String,
+    type: String,
+  }],
   views: {
     type: Number,
     default: 0,

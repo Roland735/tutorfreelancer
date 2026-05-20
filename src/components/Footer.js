@@ -2,8 +2,23 @@ import Link from "next/link";
 import { GraduationCap, Twitter, Facebook, Linkedin, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { usePlatformContent } from "@/lib/usePlatformContent";
+
+const iconMap = {
+  Twitter,
+  Facebook,
+  LinkedIn: Linkedin,
+  Instagram,
+};
 
 export default function Footer() {
+  const { content } = usePlatformContent(["site.footer"]);
+  const footer = content["site.footer"] || {};
+  const sections = footer.sections || [];
+  const socialLinks = footer.socialLinks || [];
+  const newsletter = footer.newsletter || {};
+  const legalLinks = footer.legalLinks || [];
+
   return (
     <footer className="bg-background border-t border-border pt-20 pb-10 transition-colors duration-300">
       <div className="container mx-auto px-4">
@@ -17,15 +32,12 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-muted-foreground mb-6 max-w-sm leading-relaxed">
-              The premier peer-to-peer marketplace for academic success. Connect with top student tutors from leading universities and master any subject.
+              {footer.brandDescription}
             </p>
             <div className="flex gap-4">
-              {[
-                { Icon: Twitter, href: "#" },
-                { Icon: Facebook, href: "#" },
-                { Icon: Linkedin, href: "#" },
-                { Icon: Instagram, href: "#" }
-              ].map(({ Icon, href }, index) => (
+              {socialLinks.map(({ name, href }, index) => {
+                const Icon = iconMap[name] || Twitter;
+                return (
                 <a 
                   key={index} 
                   href={href} 
@@ -33,53 +45,38 @@ export default function Footer() {
                 >
                   <Icon size={18} />
                 </a>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h4 className="text-foreground font-bold mb-6 font-heading">For Students</h4>
-            <ul className="space-y-4 text-muted-foreground text-sm">
-              <li><Link href="/tutors" className="hover:text-primary transition-colors">Browse Tutors</Link></li>
-              <li><Link href="/jobs" className="hover:text-primary transition-colors">Post a Job</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-primary transition-colors">How to Hire</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Student Success Stories</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-foreground font-bold mb-6 font-heading">For Tutors</h4>
-            <ul className="space-y-4 text-muted-foreground text-sm">
-              <li><Link href="/jobs" className="hover:text-primary transition-colors">Browse Jobs</Link></li>
-              <li><Link href="/signup" className="hover:text-primary transition-colors">Become a Tutor</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Tutor Resources</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Community Guidelines</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-foreground font-bold mb-6 font-heading">Company</h4>
-            <ul className="space-y-4 text-muted-foreground text-sm">
-              <li><Link href="#" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Careers</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Blog</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Contact Support</Link></li>
-            </ul>
-          </div>
+          {sections.map((section) => (
+            <div key={section.title}>
+              <h4 className="text-foreground font-bold mb-6 font-heading">{section.title}</h4>
+              <ul className="space-y-4 text-muted-foreground text-sm">
+                {section.links.map((link) => (
+                  <li key={link.href + link.label}>
+                    <Link href={link.href} className="hover:text-primary transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
           {/* Newsletter */}
           <div className="lg:col-span-1">
-            <h4 className="text-foreground font-bold mb-6 font-heading">Stay Updated</h4>
-            <p className="text-muted-foreground text-sm mb-4">Subscribe to our newsletter for the latest tips and updates.</p>
+            <h4 className="text-foreground font-bold mb-6 font-heading">{newsletter.title}</h4>
+            <p className="text-muted-foreground text-sm mb-4">{newsletter.description}</p>
             <form className="flex flex-col gap-3">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={newsletter.placeholder}
                 className="bg-background border-input focus:border-primary"
               />
               <Button type="button" className="w-full">
-                Subscribe
+                {newsletter.buttonLabel}
               </Button>
             </form>
           </div>
@@ -91,9 +88,11 @@ export default function Footer() {
             © {new Date().getFullYear()} TutorFreelance. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Cookie Settings</Link>
+            {legalLinks.map((link) => (
+              <Link key={link.href + link.label} href={link.href} className="hover:text-primary transition-colors">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

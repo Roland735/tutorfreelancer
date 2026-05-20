@@ -22,7 +22,10 @@ export async function GET(req) {
     const limit = parseInt(searchParams.get('limit')) || 12;
     const skip = (page - 1) * limit;
 
-    const query = {};
+    const query = {
+      moderationStatus: { $ne: 'rejected' },
+      verificationStatus: { $in: ['pending', 'verified'] },
+    };
 
     if (featured === 'true') {
       query.isFeatured = true;
@@ -151,14 +154,18 @@ export async function GET(req) {
 
     const total = await TutorProfile.countDocuments(query);
     const tutors = await TutorProfile.find(query)
-      .populate("user", "name avatar university location bio languages")
+      .populate("user", "name avatar university location bio languages accountStatus")
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .lean();
 
+    const visibleTutors = tutors.filter(
+      (tutor) => !['suspended', 'deleted'].includes(tutor.user?.accountStatus)
+    );
+
     return NextResponse.json({
-      tutors,
+      tutors: visibleTutors,
       pagination: {
         total,
         page,

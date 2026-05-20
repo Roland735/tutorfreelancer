@@ -9,9 +9,13 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { usePlatformContent } from "@/lib/usePlatformContent";
 
 export default function PostJobPage() {
   const router = useRouter();
+  const { content } = usePlatformContent(["lookups.marketplace", "page.jobPosting"]);
+  const lookups = content["lookups.marketplace"] || {};
+  const pageContent = content["page.jobPosting"] || {};
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -27,10 +31,7 @@ export default function PostJobPage() {
     urgency: "Medium",
   });
 
-  const categories = [
-    "Mathematics", "Computer Science", "Physics", "Chemistry",
-    "Biology", "English", "History", "Foreign Languages", "Engineering", "Business"
-  ];
+  const categories = lookups.jobCategories || [];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,8 +84,8 @@ export default function PostJobPage() {
 
         <Card className="border-border shadow-xl">
           <CardHeader className="p-8 pb-4">
-            <CardTitle className="text-3xl font-heading">Post a New Job</CardTitle>
-            <CardDescription>Tell us what you need help with.</CardDescription>
+            <CardTitle className="text-3xl font-heading">{pageContent.title || "Post a New Job"}</CardTitle>
+            <CardDescription>{pageContent.description || "Tell us what you need help with."}</CardDescription>
           </CardHeader>
           <CardContent className="p-8 pt-4">
             <form onSubmit={handleSubmit} className="space-y-6">

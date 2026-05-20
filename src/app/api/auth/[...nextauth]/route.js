@@ -21,6 +21,10 @@ export const authOptions = {
           throw new Error("Invalid email or password");
         }
 
+        if (user.accountStatus === "suspended" || user.accountStatus === "deleted") {
+          throw new Error("This account is not allowed to sign in");
+        }
+
         const isPasswordMatched = await bcrypt.compare(
           credentials.password,
           user.password
