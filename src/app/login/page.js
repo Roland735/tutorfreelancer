@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { usePlatformContent } from "@/lib/usePlatformContent";
+
+const LOGIN_STORAGE_KEY = "tutorfreelance-remembered-login";
 
 function LoginContent() {
   const router = useRouter();
@@ -46,6 +48,50 @@ function LoginContent() {
   const [demoLoading, setDemoLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const savedLogin = window.localStorage.getItem(LOGIN_STORAGE_KEY);
+      if (!savedLogin) {
+        return;
+      }
+
+      const parsedLogin = JSON.parse(savedLogin);
+      setRememberMe(parsedLogin.rememberMe !== false);
+      setEmail(parsedLogin.email || "");
+    } catch (storageError) {
+      console.error("Unable to load remembered login details:", storageError);
+      window.localStorage.removeItem(LOGIN_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!rememberMe) {
+      window.localStorage.removeItem(LOGIN_STORAGE_KEY);
+      return;
+    }
+
+    try {
+      // Only persist the email locally; never store plaintext passwords.
+      window.localStorage.setItem(
+        LOGIN_STORAGE_KEY,
+        JSON.stringify({
+          email,
+          rememberMe: true,
+        })
+      );
+    } catch (storageError) {
+      console.error("Unable to save remembered login details:", storageError);
+    }
+  }, [email, rememberMe]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -62,6 +108,9 @@ function LoginContent() {
         setError("Invalid email or password");
         setLoading(false);
       } else {
+        if (!rememberMe && typeof window !== "undefined") {
+          window.localStorage.removeItem(LOGIN_STORAGE_KEY);
+        }
         router.push(redirect);
       }
     } catch (error) {
