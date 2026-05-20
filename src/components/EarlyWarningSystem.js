@@ -18,7 +18,12 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 
-const initialMarks = [{ title: "Assessment 1", score: "" }];
+const initialMarks = [{ title: "Assessment 1", score: "", topics: "" }];
+const assessmentOptions = [
+  { value: 4, label: "4 questions", description: "Short check-in" },
+  { value: 10, label: "10 questions", description: "Standard assessment" },
+  { value: 20, label: "20 questions", description: "Detailed assessment" },
+];
 
 const riskToneMap = {
   LOW: {
@@ -53,6 +58,7 @@ export default function EarlyWarningSystem({
   const [moduleName, setModuleName] = useState("");
   const [studyChallenges, setStudyChallenges] = useState("");
   const [assessmentMarks, setAssessmentMarks] = useState(initialMarks);
+  const [assessmentLength, setAssessmentLength] = useState(4);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [quizAnswers, setQuizAnswers] = useState([]);
   const [result, setResult] = useState(null);
@@ -81,7 +87,7 @@ export default function EarlyWarningSystem({
   const addAssessment = () => {
     setAssessmentMarks((current) => [
       ...current,
-      { title: `Assessment ${current.length + 1}`, score: "" },
+      { title: `Assessment ${current.length + 1}`, score: "", topics: "" },
     ]);
   };
 
@@ -94,10 +100,12 @@ export default function EarlyWarningSystem({
   const buildPayload = () => ({
     moduleName,
     studyChallenges,
+    assessmentLength,
     assessmentMarks: assessmentMarks
       .map((mark) => ({
         title: mark.title,
         score: mark.score,
+        topics: mark.topics,
       }))
       .filter((mark) => String(mark.score).trim() !== ""),
   });
@@ -139,6 +147,29 @@ export default function EarlyWarningSystem({
     );
   };
 
+  const handleAssessmentLengthChange = (value) => {
+    setAssessmentLength(value);
+    setQuizQuestions([]);
+    setQuizAnswers([]);
+    setResult(null);
+    setError("");
+  };
+
+  const getQuestionTypeLabel = (type) => {
+    switch (type) {
+      case "multiple_choice":
+        return "Multiple choice";
+      case "fill_in":
+        return "Fill in";
+      case "code_fill":
+        return "Code fill";
+      default:
+        return "Short answer";
+    }
+  };
+
+  const hasSubmittedAssessment = Boolean(result?.prediction);
+
   const handlePredict = async () => {
     setError("");
     setLoadingAction("predict");
@@ -174,9 +205,8 @@ export default function EarlyWarningSystem({
       className={`rounded-[32px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.95)] sm:p-8 ${className}`}
     >
       <div
-        className={`grid gap-8 ${
-          compact ? "xl:grid-cols-[0.95fr_1.05fr]" : "xl:grid-cols-[0.9fr_1.1fr]"
-        }`}
+        className={`grid gap-8 ${compact ? "xl:grid-cols-[0.95fr_1.05fr]" : "xl:grid-cols-[0.9fr_1.1fr]"
+          }`}
       >
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">
@@ -219,6 +249,31 @@ export default function EarlyWarningSystem({
               </div>
 
               <div className="sm:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-slate-200">
+                  Assessment type
+                </label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {assessmentOptions.map((option) => {
+                    const selected = assessmentLength === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleAssessmentLengthChange(option.value)}
+                        className={`rounded-2xl border px-4 py-4 text-left transition ${selected
+                          ? "border-emerald-300/40 bg-emerald-400/10 text-white"
+                          : "border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
+                          }`}
+                      >
+                        <p className="text-sm font-semibold">{option.label}</p>
+                        <p className="mt-1 text-xs text-slate-400">{option.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <label className="block text-sm font-medium text-slate-200">
                     Previous assessment marks
@@ -234,7 +289,10 @@ export default function EarlyWarningSystem({
 
                 <div className="space-y-3">
                   {assessmentMarks.map((mark, index) => (
-                    <div key={`mark-${index}`} className="grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+                    <div
+                      key={`mark-${index}`}
+                      className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3"
+                    >
                       <Input
                         value={mark.title}
                         onChange={(event) =>
@@ -243,25 +301,35 @@ export default function EarlyWarningSystem({
                         placeholder="Assessment name"
                         className="h-12 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
                       />
+                      <div className="grid gap-3 sm:grid-cols-[140px_auto]">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={mark.score}
+                          onChange={(event) =>
+                            handleMarkChange(index, "score", event.target.value)
+                          }
+                          placeholder="Score %"
+                          className="h-12 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => removeAssessment(index)}
+                          className="h-12 rounded-2xl border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                        >
+                          Remove
+                        </Button>
+                      </div>
                       <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={mark.score}
+                        value={mark.topics || ""}
                         onChange={(event) =>
-                          handleMarkChange(index, "score", event.target.value)
+                          handleMarkChange(index, "topics", event.target.value)
                         }
-                        placeholder="Score %"
+                        placeholder="Topics covered, e.g. limits, derivatives, chain rule"
                         className="h-12 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => removeAssessment(index)}
-                        className="h-12 rounded-2xl border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                      >
-                        Remove
-                      </Button>
                     </div>
                   ))}
                 </div>
@@ -339,24 +407,91 @@ export default function EarlyWarningSystem({
                     key={question.id}
                     className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
                   >
-                    <p className="text-sm font-semibold text-white">
-                      {index + 1}. {question.question}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-semibold text-white">
+                        {index + 1}. {question.question}
+                      </p>
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-300">
+                        {getQuestionTypeLabel(question.type)}
+                      </span>
+                    </div>
                     {question.whyItMatters && (
                       <p className="mt-2 text-xs leading-6 text-slate-400">
                         {question.whyItMatters}
                       </p>
                     )}
-                    <Textarea
-                      value={
-                        quizAnswers.find((item) => item.id === question.id)?.answer || ""
-                      }
-                      onChange={(event) =>
-                        handleAnswerChange(question.id, event.target.value)
-                      }
-                      placeholder="Type your answer here"
-                      className="mt-3 min-h-[96px] rounded-2xl border-white/10 bg-slate-950/70 text-white placeholder:text-slate-500"
-                    />
+                    {question.type === "multiple_choice" && Array.isArray(question.options) ? (
+                      <div className="mt-3 grid gap-2">
+                        {question.options.map((option, optionIndex) => {
+                          const selectedAnswer =
+                            quizAnswers.find((item) => item.id === question.id)?.answer || "";
+                          const isSelected = selectedAnswer === option;
+                          return (
+                            <button
+                              key={`${question.id}-option-${optionIndex}`}
+                              type="button"
+                              onClick={() => handleAnswerChange(question.id, option)}
+                              className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${isSelected
+                                ? "border-emerald-300/40 bg-emerald-400/10 text-white"
+                                : "border-white/10 bg-slate-950/60 text-slate-300 hover:bg-white/[0.06]"
+                                }`}
+                            >
+                              {option}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : question.type === "fill_in" ? (
+                      <Input
+                        value={
+                          quizAnswers.find((item) => item.id === question.id)?.answer || ""
+                        }
+                        onChange={(event) =>
+                          handleAnswerChange(question.id, event.target.value)
+                        }
+                        placeholder={question.placeholder || "Type the missing word or answer"}
+                        className="mt-3 h-12 rounded-2xl border-white/10 bg-slate-950/70 text-white placeholder:text-slate-500"
+                      />
+                    ) : question.type === "code_fill" ? (
+                      <>
+                        {question.codeTemplate && (
+                          <pre className="mt-3 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-xs leading-6 text-slate-200">
+                            <code>{question.codeTemplate}</code>
+                          </pre>
+                        )}
+                        <Textarea
+                          value={
+                            quizAnswers.find((item) => item.id === question.id)?.answer || ""
+                          }
+                          onChange={(event) =>
+                            handleAnswerChange(question.id, event.target.value)
+                          }
+                          placeholder={question.placeholder || "Fill in the missing code"}
+                          className="mt-3 min-h-[110px] rounded-2xl border-white/10 bg-slate-950/70 font-mono text-white placeholder:text-slate-500"
+                        />
+                      </>
+                    ) : (
+                      <Textarea
+                        value={
+                          quizAnswers.find((item) => item.id === question.id)?.answer || ""
+                        }
+                        onChange={(event) =>
+                          handleAnswerChange(question.id, event.target.value)
+                        }
+                        placeholder="Type your answer here"
+                        className="mt-3 min-h-[96px] rounded-2xl border-white/10 bg-slate-950/70 text-white placeholder:text-slate-500"
+                      />
+                    )}
+                    {hasSubmittedAssessment && question.correctAnswer && (
+                      <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
+                          Correct answer
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-emerald-50">
+                          {question.correctAnswer}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -385,7 +520,7 @@ export default function EarlyWarningSystem({
                   Generate the quiz to continue
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  The system creates a short AI quiz based on your module, marks, and learning challenge.
+                  The system creates a mixed assessment with multiple choice, fill-in, code-fill, and short-answer questions.
                 </p>
               </div>
             )}

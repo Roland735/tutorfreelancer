@@ -31,10 +31,20 @@ export function usePlatformContent(keys = []) {
             cache: "no-store",
           }
         );
-        const payload = await response.json();
+        const rawPayload = await response.text();
+        let payload = {};
+
+        try {
+          payload = rawPayload ? JSON.parse(rawPayload) : {};
+        } catch {
+          payload = {};
+        }
 
         if (!response.ok) {
-          throw new Error(payload.message || "Failed to load platform content.");
+          throw new Error(
+            payload.message ||
+            `Failed to load platform content (${response.status}).`
+          );
         }
 
         if (!cancelled) {

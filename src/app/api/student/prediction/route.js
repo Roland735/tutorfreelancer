@@ -7,6 +7,8 @@ import TutorProfile from "@/models/TutorProfile";
 
 const ALLOWED_ACTIONS = new Set(["generateQuiz", "predict"]);
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
+const QUIZ_LENGTH_OPTIONS = new Set([4, 10, 20]);
+const QUIZ_TYPES = ["multiple_choice", "fill_in", "code_fill", "short_answer"];
 
 function extractTextFromAnthropic(content) {
   if (!Array.isArray(content)) return "";
@@ -40,6 +42,14 @@ function normalizeMarkEntry(entry, index) {
       ? entry.title.trim()
       : `Assessment ${index + 1}`;
   const score = Number(entry?.score);
+  const topics =
+    typeof entry?.topics === "string" && entry.topics.trim()
+      ? entry.topics
+        .split(/[,\n/;]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 8)
+      : [];
 
   if (!Number.isFinite(score)) {
     return null;
@@ -48,7 +58,23 @@ function normalizeMarkEntry(entry, index) {
   return {
     title: label,
     score: clamp(Math.round(score), 0, 100),
+    topics,
   };
+}
+
+function extractAssessmentTopics(assessmentMarks = []) {
+  return Array.from(
+    new Set(
+      assessmentMarks.flatMap((item) =>
+        Array.isArray(item?.topics) ? item.topics.filter(Boolean) : []
+      )
+    )
+  ).slice(0, 8);
+}
+
+function normalizeAssessmentLength(value) {
+  const length = Number(value);
+  return QUIZ_LENGTH_OPTIONS.has(length) ? length : 4;
 }
 
 function normalizeQuizQuestions(items) {
@@ -64,6 +90,22 @@ function normalizeQuizQuestions(items) {
         typeof item?.whyItMatters === "string" && item.whyItMatters.trim()
           ? item.whyItMatters.trim()
           : "";
+      const type = QUIZ_TYPES.includes(item?.type) ? item.type : "short_answer";
+      const options = Array.isArray(item?.options)
+        ? item.options.filter((option) => typeof option === "string" && option.trim()).slice(0, 5)
+        : [];
+      const codeTemplate =
+        typeof item?.codeTemplate === "string" && item.codeTemplate.trim()
+          ? item.codeTemplate.trim()
+          : "";
+      const placeholder =
+        typeof item?.placeholder === "string" && item.placeholder.trim()
+          ? item.placeholder.trim()
+          : "";
+      const correctAnswer =
+        typeof item?.correctAnswer === "string" && item.correctAnswer.trim()
+          ? item.correctAnswer.trim()
+          : "";
 
       if (!question) return null;
 
@@ -72,12 +114,17 @@ function normalizeQuizQuestions(items) {
           typeof item?.id === "string" && item.id.trim()
             ? item.id.trim()
             : `q${index + 1}`,
+        type,
         question,
         whyItMatters,
+        options: type === "multiple_choice" ? options.slice(0, 4) : [],
+        codeTemplate: type === "code_fill" ? codeTemplate : "",
+        placeholder,
+        correctAnswer,
       };
     })
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, 20);
 }
 
 function normalizeQuizAnswers(items) {
@@ -99,33 +146,65 @@ function normalizeQuizAnswers(items) {
     .filter(Boolean);
 }
 
-function buildFallbackQuiz(moduleName, studyChallenges) {
+function buildFallbackQuiz(moduleName, studyChallenges, assessmentMarks = [], assessmentLength = 4) {
   const context = studyChallenges
     ? ` especially around ${studyChallenges.toLowerCase()}`
     : "";
-
-  return [
-    {
-      id: "q1",
-      question: `What is the topic in ${moduleName} that currently feels least clear to you${context}?`,
-      whyItMatters: "Reveals whether the student can identify the exact gap causing poor performance.",
-    },
-    {
-      id: "q2",
-      question: `Describe one recent mistake you made in ${moduleName} and how you would correct it now.`,
-      whyItMatters: "Shows reflection, error awareness, and whether misconceptions are improving.",
-    },
-    {
-      id: "q3",
-      question: `How do you currently revise for ${moduleName} before tests or coursework deadlines?`,
-      whyItMatters: "Assesses consistency of study routines and exam preparation habits.",
-    },
-    {
-      id: "q4",
-      question: `What kind of tutor support would help you most in ${moduleName} over the next two weeks?`,
-      whyItMatters: "Helps convert the prediction into a practical support plan.",
-    },
+  const topicHints = extractAssessmentTopics(assessmentMarks);
+  const topics = topicHints.length ? topicHints : [moduleName];
+  const templates = [
+    (topic, index) => ({
+      id: `q${index + 1}`,
+      type: "multiple_choice",
+      question: `Which statement best describes your confidence with ${topic} in ${moduleName}?`,
+      whyItMatters: "Shows current confidence and whether the topic needs urgent support.",
+      options: [
+        "I can solve it confidently on my own.",
+        "I understand some parts but make errors.",
+        "I often guess or get stuck.",
+        "I have not understood it yet.",
+      ],
+      placeholder: "",
+      codeTemplate: "",
+      correctAnswer: "I understand some parts but make errors.",
+    }),
+    (topic, index) => ({
+      id: `q${index + 1}`,
+      type: "fill_in",
+      question: `Fill in one key idea, formula, or term you connect with ${topic} in ${moduleName}.`,
+      whyItMatters: "Checks recall of core concepts from previously assessed topics.",
+      options: [],
+      placeholder: `Type a key idea for ${topic}`,
+      codeTemplate: "",
+      correctAnswer: `A correct response should name a valid core idea, formula, or term related to ${topic}.`,
+    }),
+    (topic, index) => ({
+      id: `q${index + 1}`,
+      type: "code_fill",
+      question: `Complete the missing line so this ${moduleName} example about ${topic} works.`,
+      whyItMatters: "Tests whether the student can apply process steps instead of only describing them.",
+      options: [],
+      placeholder: "Type the missing code or working step",
+      codeTemplate: `// ${moduleName}: ${topic}\nfunction solveStep(input) {\n  // TODO: add the missing line here\n  return input;\n}`,
+      correctAnswer: "Add the missing line that correctly performs the required step before returning the result.",
+    }),
+    (topic, index) => ({
+      id: `q${index + 1}`,
+      type: "short_answer",
+      question: `What usually causes you to lose marks on ${topic} in ${moduleName}${context}?`,
+      whyItMatters: "Identifies misconceptions, revision gaps, or exam-technique issues.",
+      options: [],
+      placeholder: "Type your answer here",
+      codeTemplate: "",
+      correctAnswer: `A strong answer should clearly identify a real difficulty with ${topic}, such as misunderstanding concepts, missing steps, or exam-technique errors.`,
+    }),
   ];
+
+  return Array.from({ length: assessmentLength }, (_, index) => {
+    const topic = topics[index % topics.length];
+    const builder = templates[index % templates.length];
+    return builder(topic, index);
+  });
 }
 
 function buildHeuristicPrediction({
@@ -138,6 +217,7 @@ function buildHeuristicPrediction({
   const averageMark = assessmentMarks.length
     ? assessmentMarks.reduce((sum, item) => sum + item.score, 0) / assessmentMarks.length
     : 0;
+  const assessmentTopics = extractAssessmentTopics(assessmentMarks);
   const answeredQuestions = quizAnswers.filter((item) => item.answer.trim()).length;
   const answerDepthScores = quizAnswers.map((item) => {
     const lengthScore = Math.min(item.answer.trim().length, 240);
@@ -188,15 +268,24 @@ function buildHeuristicPrediction({
   if (studyChallenges) {
     risks.push(`You flagged ${studyChallenges.toLowerCase()} as a challenge, which should be addressed early.`);
   }
+  if (assessmentTopics.length) {
+    risks.push(`Your recent assessments covered ${assessmentTopics.slice(0, 3).join(", ")}, so weak spots in those areas need checking.`);
+  }
 
   const recommendations = [
     `Break ${moduleName} into 2-3 specific subtopics and review one per study block this week.`,
     "Book a tutor for a diagnostic session focused on recent low-scoring assessments and misconceptions.",
     "Create a short weekly revision routine with timed practice and feedback on mistakes.",
   ];
+  if (assessmentTopics.length) {
+    recommendations.unshift(
+      `Revisit the topics already assessed in ${moduleName}, especially ${assessmentTopics.slice(0, 3).join(", ")}.`
+    );
+  }
 
   const tutorSearchKeywords = [
     moduleName,
+    ...assessmentTopics,
     ...moduleName
       .split(/[\s/-]+/)
       .map((part) => part.trim())
@@ -214,13 +303,16 @@ function buildHeuristicPrediction({
     tutorSearchKeywords,
     recommendedTutorFocus: [
       `Explain difficult ${moduleName} concepts clearly`,
+      ...(assessmentTopics.length
+        ? [`Target assessed topics such as ${assessmentTopics.slice(0, 2).join(" and ")}`]
+        : []),
       "Review past assessments and exam technique",
       "Build a weekly revision plan",
-    ],
+    ].slice(0, 4),
   };
 }
 
-function safeParseQuiz(rawText, moduleName, studyChallenges) {
+function safeParseQuiz(rawText, moduleName, studyChallenges, assessmentMarks, assessmentLength) {
   try {
     const parsed = JSON.parse(cleanJsonBlock(rawText));
     const quizQuestions = normalizeQuizQuestions(parsed?.quizQuestions);
@@ -228,7 +320,7 @@ function safeParseQuiz(rawText, moduleName, studyChallenges) {
     if (quizQuestions.length) {
       return {
         provider: "anthropic",
-        quizQuestions,
+        quizQuestions: quizQuestions.slice(0, assessmentLength),
       };
     }
   } catch (error) {
@@ -237,7 +329,7 @@ function safeParseQuiz(rawText, moduleName, studyChallenges) {
 
   return {
     provider: "heuristic",
-    quizQuestions: buildFallbackQuiz(moduleName, studyChallenges),
+    quizQuestions: buildFallbackQuiz(moduleName, studyChallenges, assessmentMarks, assessmentLength),
   };
 }
 
@@ -286,10 +378,11 @@ async function generateQuizWithAnthropic({
   moduleName,
   assessmentMarks,
   studyChallenges,
+  assessmentLength,
 }) {
   const response = await anthropic.messages.create({
     model: ANTHROPIC_MODEL,
-    max_tokens: 600,
+    max_tokens: assessmentLength <= 4 ? 900 : assessmentLength <= 10 ? 1800 : 3200,
     temperature: 0.4,
     messages: [
       {
@@ -297,12 +390,20 @@ async function generateQuizWithAnthropic({
         content: `
 You are an academic early-warning assistant.
 Generate ONLY valid JSON in this shape:
-{"quizQuestions":[{"id":"q1","question":"...","whyItMatters":"..."},{"id":"q2","question":"...","whyItMatters":"..."},{"id":"q3","question":"...","whyItMatters":"..."},{"id":"q4","question":"...","whyItMatters":"..."}]}
+{"quizQuestions":[{"id":"q1","type":"multiple_choice|fill_in|code_fill|short_answer","question":"...","whyItMatters":"...","options":["..."],"codeTemplate":"...","placeholder":"...","correctAnswer":"..."}]}
 
 Rules:
-- Create exactly 4 short reflective questions.
+- Create exactly ${assessmentLength} questions.
 - Questions must be specific to the module.
+- Use a mix of question types across the assessment: multiple_choice, fill_in, code_fill, and short_answer.
+- Include "options" only for multiple_choice questions and give exactly 4 options.
+- Include "codeTemplate" only for code_fill questions.
+- Include "placeholder" for fill_in, code_fill, or short_answer when useful.
+- Include "correctAnswer" for every question.
+- For multiple_choice, "correctAnswer" must exactly match one of the options.
+- For fill_in, code_fill, and short_answer, "correctAnswer" should be a short model answer or marking guide.
 - Questions must help estimate confidence, revision habits, misconceptions, and support needs.
+- Use the previously assessed topics when they are provided.
 - Keep each question under 170 characters.
 - Keep each whyItMatters under 150 characters.
 
@@ -314,7 +415,13 @@ Student challenge notes: ${studyChallenges || "None supplied"}
     ],
   });
 
-  return safeParseQuiz(extractTextFromAnthropic(response.content), moduleName, studyChallenges);
+  return safeParseQuiz(
+    extractTextFromAnthropic(response.content),
+    moduleName,
+    studyChallenges,
+    assessmentMarks,
+    assessmentLength
+  );
 }
 
 async function generatePredictionWithAnthropic({
@@ -347,6 +454,7 @@ Rules:
 - Keep tutorSearchKeywords to max 5 search phrases.
 - Keep recommendedTutorFocus to max 4 items.
 - Make the tone supportive but honest.
+- Use any provided assessment topics to identify likely weak areas and useful tutor focus.
 
 Module: ${moduleName}
 Previous marks: ${JSON.stringify(assessmentMarks)}
@@ -481,6 +589,7 @@ export async function POST(request) {
     const assessmentMarks = Array.isArray(body?.assessmentMarks)
       ? body.assessmentMarks.map(normalizeMarkEntry).filter(Boolean).slice(0, 6)
       : [];
+    const assessmentLength = normalizeAssessmentLength(body?.assessmentLength);
     const studyChallenges =
       typeof body?.studyChallenges === "string" ? body.studyChallenges.trim() : "";
     const quizQuestions = normalizeQuizQuestions(body?.quizQuestions);
@@ -511,6 +620,7 @@ export async function POST(request) {
           moduleName,
           assessmentMarks,
           studyChallenges,
+          assessmentLength,
         }).catch((error) => {
           console.warn(
             `Anthropic quiz generation failed for model ${ANTHROPIC_MODEL}; using fallback quiz.`,
@@ -518,16 +628,27 @@ export async function POST(request) {
           );
           return {
             provider: "heuristic",
-            quizQuestions: buildFallbackQuiz(moduleName, studyChallenges),
+            quizQuestions: buildFallbackQuiz(
+              moduleName,
+              studyChallenges,
+              assessmentMarks,
+              assessmentLength
+            ),
           };
         })
         : {
           provider: "heuristic",
-          quizQuestions: buildFallbackQuiz(moduleName, studyChallenges),
+          quizQuestions: buildFallbackQuiz(
+            moduleName,
+            studyChallenges,
+            assessmentMarks,
+            assessmentLength
+          ),
         };
 
       return NextResponse.json({
         moduleName,
+        assessmentLength,
         assessmentMarks,
         studyChallenges,
         ...quiz,
@@ -580,6 +701,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       moduleName,
+      assessmentLength,
       assessmentMarks,
       studyChallenges,
       quizQuestions,
