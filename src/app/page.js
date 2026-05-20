@@ -876,6 +876,12 @@ export default function Home() {
                   >
                     <Link href="/post-job">Post a Request</Link>
                   </Button>
+                  <Button
+                    asChild
+                    className="h-12 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-6 text-white hover:bg-emerald-400/20"
+                  >
+                    <Link href="#early-warning">Early Warning Detector</Link>
+                  </Button>
                 </div>
 
                 <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -1051,7 +1057,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-b border-white/6 bg-slate-950/95 py-8">
+        <section id="early-warning" className="border-b border-white/6 bg-slate-950/95 py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <EarlyWarningSystem
               title="Spot learning risk before you fall behind"
