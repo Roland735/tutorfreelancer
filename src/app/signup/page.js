@@ -414,7 +414,7 @@ export default function Register() {
                 </span>
                 <span>
                   <span className="block text-[0.7rem] uppercase tracking-[0.22em] text-white/55">Zimbabwe student marketplace</span>
-                  <span className="block text-base font-semibold text-white">TutorFreelancer</span>
+                  <span className="block text-base font-semibold text-white">Mwana Wevhu Connect</span>
                 </span>
               </Link>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-100">

@@ -397,7 +397,7 @@ export default function ProfileEditPage() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Share your background, what you study or teach, and what you're looking for on TutorFreelance."
+                  placeholder="Share your background, what you study or teach, and what you're looking for on Mwana Wevhu Connect."
                 />
               </div>
 

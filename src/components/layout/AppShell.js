@@ -165,10 +165,10 @@ function SidebarContent({
           onClick={onNavigate}
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-sky-400 to-emerald-300 text-sm font-semibold text-slate-950 shadow-[0_16px_40px_rgba(59,130,246,0.28)]">
-            TF
+            MWC
           </div>
           <div className={cn("min-w-0 transition-all", collapsed && "pointer-events-none hidden")}>
-            <p className="truncate text-sm font-semibold text-white">TutorFreelancer</p>
+            <p className="truncate text-sm font-semibold text-white">Mwana Wevhu Connect</p>
             <p className="truncate text-xs text-slate-400">
               {roleScope === "admin" ? "Platform Operations" : "Student Tutor Workspace"}
             </p>

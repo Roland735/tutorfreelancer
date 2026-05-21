@@ -17,7 +17,7 @@ export default function Navbar() {
   const navigation = content["site.navigation"] || {};
   const navLinks = navigation.links || [];
   const brand = navigation.brand || {
-    name: "TutorFreelance",
+    name: "Mwana Wevhu Connect",
     tagline: "Zimbabwe Tutor Marketplace",
   };
   const authLabels = navigation.auth || {

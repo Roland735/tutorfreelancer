@@ -12,7 +12,7 @@ export default function TrustSection() {
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-16 text-foreground font-heading">Why Trust TutorFreelance?</h2>
+        <h2 className="text-3xl font-bold text-center mb-16 text-foreground font-heading">Why Trust Mwana Wevhu Connect?</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-center">
           {items.map((item, i) => (
             <div key={i} className="group p-6 rounded-xl hover:bg-muted/50 transition duration-300 border border-transparent hover:border-border">

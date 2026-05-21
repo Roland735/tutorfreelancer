@@ -1,7 +1,7 @@
 export const PLATFORM_CONTENT_SEED = {
   "site.navigation": {
     brand: {
-      name: "TutorFreelance",
+      name: "Mwana Wevhu Connect",
       tagline: "Zimbabwe Tutor Marketplace",
     },
     links: [
@@ -358,7 +358,7 @@ export const PLATFORM_CONTENT_SEED = {
           "Build a simple follow-up routine that helps students retain concepts and prepare smarter.",
         date: "Latest",
         readTime: "5 min read",
-        author: { name: "TutorFreelance Team" },
+        author: { name: "Mwana Wevhu Connect Team" },
       },
       {
         id: "home-blog-2",
@@ -368,7 +368,7 @@ export const PLATFORM_CONTENT_SEED = {
           "Learn how better proof, positioning, and subject framing increase profile quality.",
         date: "Latest",
         readTime: "4 min read",
-        author: { name: "TutorFreelance Team" },
+        author: { name: "Mwana Wevhu Connect Team" },
       },
       {
         id: "home-blog-3",
@@ -378,7 +378,7 @@ export const PLATFORM_CONTENT_SEED = {
           "Use a concise, structured request so tutors can respond faster with stronger proposals.",
         date: "Latest",
         readTime: "6 min read",
-        author: { name: "TutorFreelance Team" },
+        author: { name: "Mwana Wevhu Connect Team" },
       },
     ],
     prediction: {
@@ -590,14 +590,14 @@ export const PLATFORM_CONTENT_SEED = {
     hero: {
       title: "Building trust in university tutoring",
       description:
-        "TutorFreelance helps Zimbabwean university students find credible academic support and gives strong tutors a serious place to grow.",
+        "Mwana Wevhu Connect helps Zimbabwean university students find credible academic support and gives strong tutors a serious place to grow.",
       ctaLabel: "Join Our Mission",
       ctaHref: "/signup",
     },
     story: {
       title: "Our Story",
       paragraphs: [
-        "TutorFreelance started with a simple need: students needed faster access to credible academic help, while capable tutors needed a more trusted way to earn from their knowledge.",
+        "Mwana Wevhu Connect started with a simple need: students needed faster access to credible academic help, while capable tutors needed a more trusted way to earn from their knowledge.",
         "We are building infrastructure for a calmer, safer, and more organized tutor marketplace that feels local to Zimbabwean universities and scalable over time.",
       ],
       image:
@@ -656,7 +656,7 @@ export const PLATFORM_CONTENT_SEED = {
     statusLabel: "Database-backed legal content",
     title: "Privacy Policy",
     intro:
-      "TutorFreelance collects account and marketplace information so the platform can operate safely, personalize experiences, and support trusted academic coordination.",
+      "Mwana Wevhu Connect collects account and marketplace information so the platform can operate safely, personalize experiences, and support trusted academic coordination.",
     paragraphs: [
       "We collect account details such as name, email, role, university, city, languages, and onboarding preferences to create accounts, improve trust, and support verification workflows.",
       "Platform data should be stored securely and processed only for legitimate marketplace operations including authentication, moderation, analytics, and service delivery.",
@@ -667,7 +667,7 @@ export const PLATFORM_CONTENT_SEED = {
     statusLabel: "Database-backed legal content",
     title: "Terms of Service",
     intro:
-      "TutorFreelance connects Zimbabwean students and tutors through a trusted academic marketplace and expects accurate information, respectful conduct, and safe platform use.",
+      "Mwana Wevhu Connect connects Zimbabwean students and tutors through a trusted academic marketplace and expects accurate information, respectful conduct, and safe platform use.",
     paragraphs: [
       "Users agree to provide accurate details, respect campus-safe conduct, and follow platform rules related to bookings, messaging, moderation, and payments.",
       "Tutors remain responsible for the accuracy of their academic claims and teaching offers. Students remain responsible for lawful and appropriate use of tutoring services.",

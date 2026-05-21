@@ -28,7 +28,7 @@ export default function Footer() {
             <Link href="/" className="text-2xl font-bold text-foreground flex items-center gap-2 group mb-6 font-heading">
               <GraduationCap className="text-primary text-3xl group-hover:text-primary/80 transition-colors" />
               <span className="tracking-tight">
-                Tutor<span className="text-primary">Freelance</span>
+                Mwana Wevhu <span className="text-primary">Connect</span>
               </span>
             </Link>
             <p className="text-muted-foreground mb-6 max-w-sm leading-relaxed">
@@ -85,7 +85,7 @@ export default function Footer() {
         {/* Newsletter & Copyright */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} TutorFreelance. All rights reserved.
+            © {new Date().getFullYear()} Mwana Wevhu Connect. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
             {legalLinks.map((link) => (

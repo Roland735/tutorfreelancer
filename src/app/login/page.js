@@ -114,7 +114,6 @@ function LoginContent() {
         router.push(redirect);
       }
     } catch (error) {
-      console.error("Login error:", error);
       setError("An unexpected error occurred");
       setLoading(false);
     }
@@ -161,7 +160,7 @@ function LoginContent() {
                 </span>
                 <span>
                   <span className="block text-[0.7rem] uppercase tracking-[0.22em] text-white/55">Trusted tutoring network</span>
-                  <span className="block text-base font-semibold text-white">TutorFreelance</span>
+                  <span className="block text-base font-semibold text-white">Mwana Wevhu Connect</span>
                 </span>
               </Link>
               <div className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 sm:block">
@@ -270,7 +269,7 @@ function LoginContent() {
                     size="lg"
                     className="h-14 w-full rounded-2xl bg-gradient-to-r from-primary via-sky-400 to-emerald-300 text-base font-semibold text-slate-950 shadow-[0_18px_45px_rgba(59,130,246,0.35)] transition duration-200 hover:scale-[1.01] hover:from-primary/95 hover:via-sky-300 hover:to-emerald-200"
                   >
-                    <span>{loading ? "Signing in..." : "Sign in to TutorFreelance"}</span>
+                    <span>{loading ? "Signing in..." : "Sign in to Mwana Wevhu Connect"}</span>
                     {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
                 </form>
@@ -377,7 +376,7 @@ function LoginContent() {
                   Trusted by ambitious students who want better academic outcomes.
                 </h2>
                 <p className="mt-5 max-w-md text-base leading-7 text-slate-300">
-                  TutorFreelance connects learners with verified university tutors in a space that feels private, focused, and built for real progress.
+                  Mwana Wevhu Connect connects learners with verified university tutors in a space that feels private, focused, and built for real progress.
                 </p>
               </div>
 

@@ -216,7 +216,7 @@ const fallbackBlogs = [
       "Build a simple follow-up routine that helps students retain concepts, prepare smarter, and reduce last-minute panic.",
     date: "New",
     readTime: "5 min read",
-    author: { name: "TutorFreelance Team" },
+    author: { name: "Mwana Wevhu Connect Team" },
   },
   {
     id: "blog-2",
@@ -226,7 +226,7 @@ const fallbackBlogs = [
       "Learn how better positioning, proof, and subject framing can increase profile quality without sounding salesy.",
     date: "New",
     readTime: "4 min read",
-    author: { name: "TutorFreelance Team" },
+    author: { name: "Mwana Wevhu Connect Team" },
   },
   {
     id: "blog-3",
@@ -236,7 +236,7 @@ const fallbackBlogs = [
       "Use a concise, structured request format so tutors can respond faster with stronger proposals and clearer expectations.",
     date: "New",
     readTime: "6 min read",
-    author: { name: "TutorFreelance Team" },
+    author: { name: "Mwana Wevhu Connect Team" },
   },
 ];
 
@@ -258,7 +258,7 @@ const getCategoryIcon = (slug) => categoryIconMap[slug] || Layers3;
 const getBlogAuthor = (blog) =>
   typeof blog.author === "string"
     ? blog.author
-    : blog.author?.name || "TutorFreelance Team";
+    : blog.author?.name || "Mwana Wevhu Connect Team";
 
 function SectionHeader({ eyebrow, title, description, action }) {
   return (

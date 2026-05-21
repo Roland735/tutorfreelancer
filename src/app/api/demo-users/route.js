@@ -1,13 +1,20 @@
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 
+const DEMO_EMAIL_BY_ROLE = {
+  admin: "admin@tutorfreelance.demo",
+  student: "student@tutorfreelance.demo",
+  tutor: "tutor@tutorfreelance.demo",
+};
+
 export async function GET(request) {
   await dbConnect();
   const { searchParams } = new URL(request.url);
   const role = searchParams.get("role");
 
-  const query = role ? { role } : {};
-  const user = await User.findOne(query).select("email role").sort({ createdAt: -1 });
+  const demoEmail = role ? DEMO_EMAIL_BY_ROLE[role] : null;
+  const query = demoEmail ? { email: demoEmail, role } : {};
+  const user = await User.findOne(query).select("email role");
 
   if (!user) {
     return Response.json(

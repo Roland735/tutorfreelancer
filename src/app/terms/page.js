@@ -34,7 +34,7 @@ export default function TermsPage() {
                 <GraduationCap className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">TutorFreelancer</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mwana Wevhu Connect</p>
                 <h1 className="text-3xl font-semibold text-white">{pageContent.title || "Terms of Service"}</h1>
               </div>
             </div>
